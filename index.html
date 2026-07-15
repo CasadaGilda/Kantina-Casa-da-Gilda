@@ -1,0 +1,1479 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<!-- Configurações PWA -->
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#1F4735">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3081/3081944.png">
+
+<script>
+  // Registra o service worker se o navegador suportar
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js')
+        .then(reg => console.log('Service Worker registrado com sucesso:', reg.scope))
+        .catch(err => console.error('Falha ao registrar o Service Worker:', err));
+    });
+  }
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cantina em Dia</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
+
+:root{
+  --bg: #F3F1E8;
+  --surface: #FFFFFF;
+  --ink: #22291E;
+  --ink-soft: #5B6355;
+  --line: #DCD7C4;
+  --primary: #1F4735;
+  --primary-soft: #2C5C46;
+  --accent: #E3A73E;
+  --accent-ink: #4A3005;
+  --danger: #B23A2E;
+  --danger-soft: #F6E4E1;
+  --good: #2C6E49;
+  --good-soft: #E3EFE4;
+  --radius: 10px;
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'IBM Plex Mono', 'SFMono-Regular', Menlo, monospace;
+}
+
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:var(--font-body);
+  -webkit-font-smoothing:antialiased;
+}
+
+::selection{ background: var(--accent); color:var(--accent-ink); }
+
+.app{ max-width:1180px; margin:0 auto; padding:0 20px 60px; }
+
+/* ---------- TELA DE LOGIN ---------- */
+.login-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+}
+.login-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 32px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+}
+.login-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  border-bottom: 2px solid var(--line);
+}
+.login-tab {
+  flex: 1;
+  background: none;
+  border: none;
+  padding: 10px;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--ink-soft);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+}
+.login-tab.active {
+  color: var(--primary);
+  border-bottom-color: var(--accent);
+}
+
+/* ---------- HEADER ---------- */
+header.top{
+  padding:28px 20px 0;
+  max-width:1180px;
+  margin:0 auto;
+}
+.brand{
+  display:flex; align-items:baseline; gap:12px; flex-wrap:wrap;
+}
+.brand h1{
+  font-family:var(--font-display);
+  font-weight:700;
+  font-size:32px;
+  margin:0;
+  color:var(--primary);
+  letter-spacing:-0.01em;
+}
+.brand .dot{ color:var(--accent); }
+.brand .tagline{
+  font-size:13px;
+  color:var(--ink-soft);
+  font-family:var(--font-mono);
+  letter-spacing:0.02em;
+}
+.datebar{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top:4px;
+  font-size:13px;
+  color:var(--ink-soft);
+}
+
+nav.tabs{
+  display:flex;
+  gap:4px;
+  margin-top:22px;
+  border-bottom:2px solid var(--line);
+  overflow-x:auto;
+}
+nav.tabs button{
+  font-family:var(--font-body);
+  font-weight:600;
+  font-size:14px;
+  background:none;
+  border:none;
+  padding:10px 16px 12px;
+  color:var(--ink-soft);
+  cursor:pointer;
+  border-bottom:2px solid transparent;
+  margin-bottom:-2px;
+  white-space:nowrap;
+  transition:color .15s;
+}
+nav.tabs button:hover{ color:var(--primary); }
+nav.tabs button.active{
+  color:var(--primary);
+  border-bottom-color:var(--accent);
+}
+
+main{ padding-top:24px; }
+.tabpanel{ display:none; }
+.tabpanel.active{ display:block; animation:fade .18s ease; }
+@keyframes fade{ from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:none;} }
+
+/* ---------- GENERIC ---------- */
+.card{
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:18px;
+}
+.grid2{ display:grid; grid-template-columns: 1.1fr 0.9fr; gap:18px; align-items:start; }
+@media (max-width:880px){ .grid2{ grid-template-columns:1fr; } }
+
+.section-title{
+  font-family:var(--font-display);
+  font-weight:600;
+  font-size:19px;
+  margin:0 0 12px;
+  color:var(--primary);
+}
+.muted{ color:var(--ink-soft); font-size:13px; }
+
+label{ display:block; font-size:12px; font-weight:600; color:var(--ink-soft); margin-bottom:4px; text-transform:uppercase; letter-spacing:0.03em; }
+input, select{
+  width:100%;
+  font-family:var(--font-body);
+  font-size:14px;
+  padding:9px 10px;
+  border:1.5px solid var(--line);
+  border-radius:7px;
+  background:#fff;
+  color:var(--ink);
+}
+input:focus, select:focus{ outline:none; border-color:var(--primary-soft); }
+.field{ margin-bottom:12px; }
+.row{ display:flex; gap:10px; }
+.row > *{ flex:1; }
+
+button.btn{
+  font-family:var(--font-body);
+  font-weight:600;
+  font-size:14px;
+  padding:10px 16px;
+  border-radius:7px;
+  border:1.5px solid var(--primary);
+  background:var(--primary);
+  color:#fff;
+  cursor:pointer;
+  transition:transform .08s, opacity .15s;
+}
+button.btn:hover{ opacity:0.92; }
+button.btn:active{ transform:scale(0.98); }
+button.btn.ghost{ background:transparent; color:var(--primary); }
+button.btn.accent{ background:var(--accent); border-color:var(--accent); color:var(--accent-ink); }
+button.btn.danger{ background:transparent; border-color:var(--danger); color:var(--danger); }
+button.btn.sm{ padding:6px 10px; font-size:12.5px; }
+button.btn:disabled{ opacity:0.45; cursor:not-allowed; }
+button.icon{
+  background:none; border:none; cursor:pointer; color:var(--ink-soft); font-size:15px; padding:4px 6px; border-radius:6px;
+}
+button.icon:hover{ background:var(--bg); color:var(--primary); }
+button.icon.delete:hover{ color:var(--danger); }
+
+table{ width:100%; border-collapse:collapse; font-size:13.5px; }
+th{
+  text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:0.03em;
+  color:var(--ink-soft); border-bottom:2px solid var(--line); padding:8px 10px; font-weight:700;
+}
+td{ padding:9px 10px; border-bottom:1px solid var(--line); vertical-align:middle; }
+tr:last-child td{ border-bottom:none; }
+tr:hover td{ background:#FAF9F3; }
+
+.badge{
+  display:inline-block; padding:2px 9px; border-radius:20px; font-size:11.5px; font-weight:600;
+}
+.badge.good{ background:var(--good-soft); color:var(--good); }
+.badge.bad{ background:var(--danger-soft); color:var(--danger); }
+.badge.neutral{ background:#EFEEE4; color:var(--ink-soft); }
+.badge.retro{ background:#FCEFD8; color:#8A5A0C; }
+
+.code-pill{
+  font-family:var(--font-mono); font-weight:600; background:var(--primary); color:#fff;
+  padding:2px 9px; border-radius:5px; letter-spacing:0.03em; font-size:12.5px;
+}
+
+.empty{
+  text-align:center; padding:40px 20px; color:var(--ink-soft);
+}
+.empty .big{ font-family:var(--font-display); font-size:17px; color:var(--ink); margin-bottom:4px; }
+
+.toast{
+  position:fixed; bottom:22px; left:50%; transform:translateX(-50%) translateY(20px);
+  background:var(--primary); color:#fff; padding:11px 20px; border-radius:8px; font-size:14px; font-weight:600;
+  opacity:0; pointer-events:none; transition:all .25s ease; z-index:200; box-shadow:0 8px 24px rgba(0,0,0,0.18);
+}
+.toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+.toast.danger{ background:var(--danger); }
+
+.modal-bg{
+  position:fixed; inset:0; background:rgba(20,24,18,0.45); display:none; align-items:center; justify-content:center; z-index:150; padding:20px;
+}
+.modal-bg.show{ display:flex; }
+.modal{
+  background:#fff; border-radius:12px; padding:22px; width:100%; max-width:480px; max-height:85vh; overflow-y:auto;
+  box-shadow:0 20px 50px rgba(0,0,0,0.25);
+}
+.modal.large{ max-width:650px; }
+.modal h3{ font-family:var(--font-display); margin:0 0 14px; color:var(--primary); font-size:19px; }
+.modal-actions{ display:flex; gap:8px; justify-content:flex-end; margin-top:16px; }
+.checklist{ max-height:130px; overflow-y:auto; border:1px solid var(--line); border-radius:7px; padding:8px; }
+.checklist label{ display:flex; align-items:center; gap:8px; font-size:13px; text-transform:none; font-weight:400; color:var(--ink); margin-bottom:6px; }
+.checklist input[type=checkbox]{ width:auto; }
+
+/* ---------- PORTAL DO RESPONSÁVEL ---------- */
+.portal-header {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+.portal-header h2 { font-family: var(--font-display); color: var(--primary); margin: 0 0 4px; }
+.kids-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; margin-top: 18px; }
+
+/* ---------- PDV ---------- */
+.pdv-search{ position:relative; }
+.pdv-results{
+  position:absolute; top:100%; left:0; right:0; background:#fff; border:1px solid var(--line);
+  border-radius:8px; margin-top:4px; box-shadow:0 10px 24px rgba(0,0,0,0.1); z-index:20; max-height:220px; overflow-y:auto;
+}
+.pdv-results div{ padding:9px 12px; cursor:pointer; font-size:13.5px; display:flex; justify-content:space-between; }
+.pdv-results div:hover{ background:var(--bg); }
+
+.student-ticket{
+  background:var(--primary); color:#fff; border-radius:10px; padding:16px 18px; position:relative; overflow:hidden;
+  background-image: radial-gradient(circle at top right, rgba(227,167,62,0.25), transparent 55%);
+}
+.student-ticket .name{ font-family:var(--font-display); font-size:20px; font-weight:600; }
+.student-ticket .meta{ font-size:12.5px; opacity:0.8; margin-top:2px; }
+.student-ticket .balance{ font-family:var(--font-mono); font-size:26px; font-weight:600; margin-top:10px; }
+.student-ticket .balance.low{ color:#FFD9CE; }
+.student-ticket .code{ position:absolute; top:14px; right:16px; font-family:var(--font-mono); font-size:12px; background:rgba(255,255,255,0.15); padding:3px 9px; border-radius:6px; }
+
+.prod-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); gap:10px; margin-top:14px; }
+.prod-card{
+  border:1.5px solid var(--line); border-radius:9px; padding:10px; cursor:pointer; background:#fff; text-align:left; font-family:var(--font-body);
+  transition:border-color .12s, transform .08s;
+}
+.prod-card:hover{ border-color:var(--accent); }
+.prod-card:active{ transform:scale(0.97); }
+.prod-card.blocked{ opacity:0.4; cursor:not-allowed; }
+.prod-card.out{ opacity:0.4; cursor:not-allowed; }
+.prod-card .pname{ font-weight:600; font-size:13.5px; margin-bottom:4px; }
+.prod-card .pprice{ font-family:var(--font-mono); color:var(--primary); font-weight:600; font-size:13px; }
+.prod-card .pstock{ font-size:11px; color:var(--ink-soft); margin-top:3px; }
+
+.cart{ margin-top:10px; }
+.cart-item{ display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-bottom:1px dashed var(--line); font-size:13.5px; }
+.cart-item .qty-ctrl{ display:flex; align-items:center; gap:6px; }
+.cart-item .qty-ctrl button{ width:22px; height:22px; border-radius:5px; border:1px solid var(--line); background:#fff; cursor:pointer; font-weight:700; }
+.cart-total{ display:flex; justify-content:space-between; font-family:var(--font-mono); font-size:18px; font-weight:600; padding-top:12px; color:var(--primary); }
+
+/* ---------- EXTRATO ---------- */
+.extrato-recibo {
+  font-family: var(--font-body);
+  background: #FFFDF9;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 24px;
+}
+.extrato-recibo h4 {
+  font-family: var(--font-display);
+  font-size: 22px;
+  color: var(--primary);
+  margin: 0 0 10px;
+  text-align: center;
+}
+.extrato-recibo .dados-linha {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px dashed var(--line);
+  padding: 8px 0;
+  font-size: 13.5px;
+}
+.extrato-recibo .dados-linha strong { color: var(--primary); }
+
+/* ---------- KPI ---------- */
+.kpis{ display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; margin-bottom:20px; }
+.kpi{ background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:14px 16px; }
+.kpi .label{ font-size:11px; text-transform:uppercase; letter-spacing:0.03em; color:var(--ink-soft); font-weight:700; }
+.kpi .value{ font-family:var(--font-display); font-size:24px; color:var(--primary); margin-top:4px; }
+
+.filters{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px; align-items:flex-end; }
+.filters .field{ margin-bottom:0; min-width:150px; }
+
+.toolbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:10px; }
+
+@media print {
+  body * { visibility: hidden; }
+  #extratoModalBg, #extratoModalBg * { visibility: visible; }
+  #extratoModalBg { position: absolute; left: 0; top: 0; width: 100%; background: none; display: block !important; }
+  .modal-actions, .modal h3 { display: none !important; }
+  .modal { box-shadow: none; max-width: 100%; width: 100%; padding: 0; }
+}
+</style>
+</head>
+<body>
+
+<!-- ===================== TELA DE LOGIN (INICIAL) ===================== -->
+<div id="loginScreen" class="login-container">
+  <div class="login-card">
+    <h2 style="font-family: var(--font-display); color: var(--primary); margin: 0 0 4px; text-align: center;">Cantina<span style="color:var(--accent)">.</span>em Dia</h2>
+    <p class="muted" style="text-align: center; margin-bottom: 24px;">Controle de consumo escolar</p>
+    
+    <div class="login-tabs">
+      <button class="login-tab active" id="tabOp" onclick="switchLoginTab('operador')">Operador</button>
+      <button class="login-tab" id="tabResp" onclick="switchLoginTab('responsavel')">Responsável</button>
+    </div>
+
+    <!-- Formulário Operador -->
+    <div id="formOperador">
+      <div class="field">
+        <label>Senha administrativa</label>
+        <input type="password" id="opPassword" placeholder="Padrão: 1234">
+      </div>
+      <button class="btn" style="width: 100%; margin-top: 8px;" onclick="tryLoginOperador()">Entrar no Sistema</button>
+    </div>
+
+    <!-- Formulário Responsável -->
+    <div id="formResponsavel" style="display: none;">
+      <div class="field">
+        <label>CPF do Responsável</label>
+        <input id="respCpfLogin" placeholder="000.000.000-00">
+      </div>
+      <div class="field">
+        <label>Senha de Acesso</label>
+        <input type="password" id="respPassword" placeholder="Padrão: 123456">
+      </div>
+      <p class="muted" style="font-size:11px; margin-bottom:14px;">(A senha padrão inicial dos responsáveis é 123456)</p>
+      <button class="btn accent" style="width: 100%;" onclick="tryLoginResponsavel()">Acessar Portal</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== PORTAL DO RESPONSÁVEL ===================== -->
+<div id="portalScreen" class="app" style="display: none; padding-top: 30px;">
+  <div class="portal-header">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <div>
+        <h2>Portal do Responsável</h2>
+        <div class="muted" id="portalWelcome">Bem-vindo</div>
+      </div>
+      <button class="btn ghost sm" onclick="logout()">Sair</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-title">Meus Filhos / Alunos Vinculados</div>
+    <p class="muted">Abaixo estão listados os alunos associados ao seu CPF. Você pode visualizar o saldo atual, o limite diário de gastos estabelecido e puxar o extrato completo de consumo.</p>
+    
+    <div class="kids-grid" id="kidsListArea"></div>
+  </div>
+</div>
+
+<!-- ===================== SISTEMA PRINCIPAL (OPERADOR) ===================== -->
+<div id="mainSystem" style="display: none;">
+  <header class="top">
+    <div class="brand">
+      <h1>Cantina<span class="dot">.</span>em Dia</h1>
+      <span class="tagline">PDV &amp; controle de consumo escolar</span>
+    </div>
+    <div class="datebar">
+      <span id="todayLabel"></span>
+      <button class="btn ghost sm" style="padding:4px 10px;" onclick="logout()">Logout</button>
+    </div>
+    <nav class="tabs">
+      <button data-tab="pdv" class="active">PDV</button>
+      <button data-tab="alunos">Alunos</button>
+      <button data-tab="produtos">Produtos</button>
+      <button data-tab="lancamentos">Lançamentos</button>
+      <button data-tab="relatorios">Relatórios</button>
+      <button data-tab="config">Config</button>
+    </nav>
+  </header>
+
+  <div class="app">
+  <main>
+    <!-- ===================== PDV ===================== -->
+    <section class="tabpanel active" id="tab-pdv">
+      <div class="grid2">
+        <div class="card">
+          <div class="section-title">Venda</div>
+          <div class="pdv-search">
+            <div class="field">
+              <label>Buscar aluno (código ou nome)</label>
+              <input id="pdvSearch" placeholder="Ex: 4821 ou Ana" autocomplete="off">
+            </div>
+            <div class="pdv-results" id="pdvResults"></div>
+          </div>
+
+          <div id="pdvStudentBox"></div>
+
+          <div id="pdvProdArea" style="display:none; margin-top:18px;">
+            <div class="row" style="align-items:flex-end;">
+              <div class="field" style="flex:2;">
+                <label>Buscar produto</label>
+                <input id="pdvProdSearch" placeholder="Filtrar produtos..." autocomplete="off">
+              </div>
+              <div class="field" style="flex:1;">
+                <label>Data do consumo</label>
+                <input type="date" id="pdvDate">
+              </div>
+            </div>
+            <div class="prod-grid" id="pdvProdGrid"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="section-title">Comanda</div>
+          <div id="cartBox">
+            <div class="empty"><div class="big">Comanda vazia</div><div>Selecione um aluno e adicione produtos.</div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== ALUNOS ===================== -->
+    <section class="tabpanel" id="tab-alunos">
+      <div class="toolbar">
+        <input id="alunoSearch" placeholder="Buscar aluno, turma, código ou responsável..." style="max-width:320px;">
+        <button class="btn accent" onclick="openStudentModal()">+ Novo aluno</button>
+      </div>
+      <div class="card" style="padding:0;">
+        <table>
+          <thead><tr><th>Código</th><th>Nome</th><th>Responsável / CPF</th><th>Turma</th><th>Saldo</th><th>Limite diário</th><th>Status</th><th>Ações</th></tr></thead>
+          <tbody id="studentsTbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ===================== PRODUTOS ===================== -->
+    <section class="tabpanel" id="tab-produtos">
+      <div class="toolbar">
+        <input id="produtoSearch" placeholder="Buscar produto..." style="max-width:320px;">
+        <button class="btn accent" onclick="openProductModal()">+ Novo produto</button>
+      </div>
+      <div class="card" style="padding:0;">
+        <table>
+          <thead><tr><th>Produto</th><th>Categoria</th><th>Preço</th><th>Estoque</th><th>Status</th><th></th></tr></thead>
+          <tbody id="productsTbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ===================== LANÇAMENTOS ===================== -->
+    <section class="tabpanel" id="tab-lancamentos">
+      <div class="filters">
+        <div class="field">
+          <label>Aluno</label>
+          <select id="filtroAluno"><option value="">Todos</option></select>
+        </div>
+        <div class="field">
+          <label>De</label>
+          <input type="date" id="filtroDe">
+        </div>
+        <div class="field">
+          <label>Até</label>
+          <input type="date" id="filtroAte">
+        </div>
+        <div class="field">
+          <label>Somente retroativos</label>
+          <select id="filtroRetro">
+            <option value="">Todos</option>
+            <option value="1">Só retroativos</option>
+          </select>
+        </div>
+        <button class="btn ghost sm" onclick="clearFilters()">Limpar filtros</button>
+      </div>
+      <div class="card" style="padding:0;">
+        <table>
+          <thead><tr><th>Aluno</th><th>Itens</th><th>Total</th><th>Data do consumo</th><th>Lançado em</th><th></th></tr></thead>
+          <tbody id="salesTbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ===================== RELATÓRIOS ===================== -->
+    <section class="tabpanel" id="tab-relatorios">
+      <div class="kpis" id="kpiBox"></div>
+      <div class="grid2">
+        <div class="card">
+          <div class="section-title">Consumo por aluno</div>
+          <table><thead><tr><th>Aluno</th><th>Compras</th><th>Total</th></tr></thead><tbody id="repAlunoTbody"></tbody></table>
+        </div>
+        <div class="card">
+          <div class="section-title">Produtos mais vendidos</div>
+          <table><thead><tr><th>Produto</th><th>Qtd</th><th>Total</th></tr></thead><tbody id="repProdTbody"></tbody></table>
+        </div>
+      </div>
+      <div class="card" style="margin-top:18px;">
+        <div class="section-title">Estoque baixo</div>
+        <table><thead><tr><th>Produto</th><th>Estoque</th></tr></thead><tbody id="repEstoqueTbody"></tbody></table>
+      </div>
+    </section>
+
+    <!-- ===================== CONFIG ===================== -->
+    <section class="tabpanel" id="tab-config">
+      <div class="card" style="max-width:480px;">
+        <div class="section-title">Configurações da cantina</div>
+        <div class="field">
+          <label>Senha de Acesso do Administrador</label>
+          <input type="password" id="cfgAdminPass" placeholder="Nova senha administrativa">
+        </div>
+        <div class="field">
+          <label>Modelo de cobrança</label>
+          <select id="cfgModo">
+            <option value="prepago">Pré-pago (aluno precisa ter saldo)</option>
+            <option value="pospago">Pós-pago (permite saldo negativo)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Nome da cantina</label>
+          <input id="cfgNome" placeholder="Ex: Cantina do Colégio Aurora">
+        </div>
+        <button class="btn" onclick="saveConfig()">Salvar configurações</button>
+      </div>
+    </section>
+  </main>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Student modal -->
+<div class="modal-bg" id="studentModalBg">
+  <div class="modal">
+    <h3 id="studentModalTitle">Novo aluno</h3>
+    <input type="hidden" id="studentId">
+    <div class="field"><label>Nome do aluno</label><input id="studentName"></div>
+    <div class="row">
+      <div class="field"><label>Turma</label><input id="studentClass" placeholder="Ex: 7ºA"></div>
+      <div class="field"><label>Código</label><input id="studentCode" style="font-family:var(--font-mono)"></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>Nome do Responsável</label><input id="studentRespName" placeholder="Pai, Mãe ou Tutor"></div>
+      <div class="field"><label>CPF do Responsável</label><input id="studentRespCpf" placeholder="000.000.000-00"></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>Saldo inicial (R$)</label><input id="studentBalance" type="number" step="0.01"></div>
+      <div class="field"><label>Limite diário (R$, opcional)</label><input id="studentLimit" type="number" step="0.01" placeholder="Sem limite"></div>
+    </div>
+    <div class="field">
+      <label>Produtos bloqueados para este aluno</label>
+      <div class="checklist" id="studentBlockedList"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn ghost" onclick="closeModal('studentModalBg')">Cancelar</button>
+      <button class="btn" onclick="saveStudent()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Recharge modal -->
+<div class="modal-bg" id="rechargeModalBg">
+  <div class="modal">
+    <h3>Adicionar crédito</h3>
+    <input type="hidden" id="rechargeStudentId">
+    <p class="muted" id="rechargeStudentName" style="margin-top:-6px;"></p>
+    <div class="field"><label>Valor a adicionar (R$)</label><input id="rechargeAmount" type="number" step="0.01"></div>
+    <div class="modal-actions">
+      <button class="btn ghost" onclick="closeModal('rechargeModalBg')">Cancelar</button>
+      <button class="btn accent" onclick="confirmRecharge()">Adicionar crédito</button>
+    </div>
+  </div>
+</div>
+
+<!-- Product modal -->
+<div class="modal-bg" id="productModalBg">
+  <div class="modal">
+    <h3 id="productModalTitle">Novo produto</h3>
+    <input type="hidden" id="productId">
+    <div class="field"><label>Nome do produto</label><input id="productName"></div>
+    <div class="row">
+      <div class="field"><label>Categoria</label><input id="productCategory" placeholder="Ex: Lanches"></div>
+      <div class="field"><label>Preço (R$)</label><input id="productPrice" type="number" step="0.01"></div>
+    </div>
+    <div class="field"><label>Estoque</label><input id="productStock" type="number" step="1"></div>
+    <div class="modal-actions">
+      <button class="btn ghost" onclick="closeModal('productModalBg')">Cancelar</button>
+      <button class="btn" onclick="saveProduct()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Extrato modal -->
+<div class="modal-bg" id="extratoModalBg">
+  <div class="modal large">
+    <h3>Extrato do Aluno</h3>
+    <div id="extratoArea"></div>
+    <div class="modal-actions">
+      <button class="btn ghost" onclick="closeModal('extratoModalBg')">Fechar</button>
+      <button class="btn accent" onclick="window.print()">Imprimir / Salvar PDF</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   STATE
+========================================================= */
+let DATA = {
+  students: [],
+  products: [],
+  sales: [],
+  recharges: [],
+  config: { modo: 'prepago', nome: 'Minha Cantina', adminPass: '1234' }
+};
+let currentSale = { studentId: null, items: [] };
+const todayStr = () => new Date().toISOString().slice(0,10);
+
+/* =========================================================
+   STORAGE
+========================================================= */
+async function loadData(){
+  try{
+    const res = await window.storage.get('cantina-data', true);
+    if(res && res.value){
+      const parsed = JSON.parse(res.value);
+      DATA = Object.assign(DATA, parsed);
+      // Garante que exista senha administrativa inicial
+      if(!DATA.config.adminPass) DATA.config.adminPass = '1234';
+    }
+  }catch(e){ }
+  render_all();
+}
+let saveTimer = null;
+function saveData(){
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(async () => {
+    try{ await window.storage.set('cantina-data', JSON.stringify(DATA), true); }
+    catch(e){ showToast('Não foi possível salvar os dados agora.', true); }
+  }, 250);
+}
+
+/* =========================================================
+   HELPERS
+========================================================= */
+function fmtMoney(v){ return 'R$ ' + (Number(v)||0).toFixed(2).replace('.', ','); }
+function fmtDate(d){
+  if(!d) return '—';
+  const [y,m,dd] = d.split('-');
+  return `${dd}/${m}/${y}`;
+}
+function uid(prefix){ return prefix + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function genStudentCode(){
+  let code;
+  do{ code = String(Math.floor(1000 + Math.random()*9000)); }
+  while(DATA.students.some(s => s.code === code));
+  return code;
+}
+function showToast(msg, danger){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (danger ? ' danger' : '');
+  setTimeout(()=> t.className = 'toast', 2200);
+}
+function closeModal(id){ document.getElementById(id).classList.remove('show'); }
+function openModalEl(id){ document.getElementById(id).classList.add('show'); }
+function studentById(id){ return DATA.students.find(s => s.id === id); }
+function productById(id){ return DATA.products.find(p => p.id === id); }
+
+// Aplicadores de máscaras de digitação de CPF
+function applyCpfMask(e) {
+  let v = e.target.value.replace(/\D/g, "");
+  if (v.length > 11) v = v.slice(0, 11);
+  v = v.replace(/(\d{3})(\d)/, "$1.$2");
+  v = v.replace(/(\d{3})(\d)/, "$1.$2");
+  v = v.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+  e.target.value = v;
+}
+document.getElementById('studentRespCpf').addEventListener('input', applyCpfMask);
+document.getElementById('respCpfLogin').addEventListener('input', applyCpfMask);
+
+/* =========================================================
+   SISTEMA DE LOGIN E TRANSIÇÃO DE TELAS
+========================================================= */
+function switchLoginTab(type) {
+  const tOp = document.getElementById('tabOp');
+  const tResp = document.getElementById('tabResp');
+  const fOp = document.getElementById('formOperador');
+  const fResp = document.getElementById('formResponsavel');
+
+  if (type === 'operador') {
+    tOp.classList.add('active'); tResp.classList.remove('active');
+    fOp.style.display = 'block'; fResp.style.display = 'none';
+  } else {
+    tOp.classList.remove('active'); tResp.classList.add('active');
+    fOp.style.display = 'none'; fResp.style.display = 'block';
+  }
+}
+
+function tryLoginOperador() {
+  const pass = document.getElementById('opPassword').value;
+  const realPass = DATA.config.adminPass || '1234';
+  if (pass === realPass) {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('mainSystem').style.display = 'block';
+    document.getElementById('opPassword').value = '';
+    showToast('Acesso administrativo autorizado.');
+  } else {
+    showToast('Senha incorreta!', true);
+  }
+}
+
+function tryLoginResponsavel() {
+  const cpf = document.getElementById('respCpfLogin').value.trim();
+  const pass = document.getElementById('respPassword').value;
+
+  if(!cpf) { showToast('Por favor, informe seu CPF.', true); return; }
+
+  // Busca se existe esse CPF atrelado a algum aluno ativo
+  const filhos = DATA.students.filter(s => s.respCpf === cpf && s.active !== false);
+
+  if (!filhos.length) {
+    showToast('Nenhum aluno ativo vinculado a este CPF.', true);
+    return;
+  }
+
+  // A senha padrão inicial para os pais é "123456"
+  if (pass === '123456') {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('portalScreen').style.display = 'block';
+    
+    // Configura e abre o portal dos pais
+    document.getElementById('portalWelcome').textContent = `Responsável: ${filhos[0].respName} (CPF: ${cpf})`;
+    renderPortalResponsavel(filhos);
+    document.getElementById('respCpfLogin').value = '';
+    document.getElementById('respPassword').value = '';
+    showToast('Acesso autorizado.');
+  } else {
+    showToast('Senha de acesso incorreta! (Tente 123456)', true);
+  }
+}
+
+function logout() {
+  document.getElementById('mainSystem').style.display = 'none';
+  document.getElementById('portalScreen').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+  showToast('Sessão encerrada.');
+}
+
+/* =========================================================
+   PORTAL EXCLUSIVO DO RESPONSÁVEL
+========================================================= */
+function renderPortalResponsavel(filhos) {
+  const area = document.getElementById('kidsListArea');
+  if(!filhos.length) {
+    area.innerHTML = '<div class="empty">Nenhum aluno vinculado ao seu perfil.</div>';
+    return;
+  }
+
+  area.innerHTML = filhos.map(f => {
+    const low = f.balance < 5;
+    return `
+      <div class="card" style="border: 1px solid var(--line); display:flex; flex-direction:column; justify-content:space-between; gap:16px;">
+        <div>
+          <div style="font-size:12px; font-family:var(--font-mono); color:var(--ink-soft); margin-bottom:4px;">CÓDIGO: #${f.code}</div>
+          <h3 style="font-family:var(--font-display); font-size:18px; margin:0 0 6px; color:var(--primary);">${f.name}</h3>
+          <div class="muted" style="font-size:12px;">Turma: ${f.className || 'Não informada'}</div>
+          <div class="muted" style="font-size:12px; margin-top:2px;">Limite diário: ${f.limit ? fmtMoney(f.limit) : 'Sem limite de gastos'}</div>
+        </div>
+        
+        <div>
+          <div style="font-size:11px; text-transform:uppercase; font-weight:600; color:var(--ink-soft);">Saldo Disponível</div>
+          <div style="font-family:var(--font-mono); font-size:24px; font-weight:600; margin-bottom:12px; ${low?'color:var(--danger);':''}">
+            ${fmtMoney(f.balance)}
+          </div>
+          <button class="btn sm" style="width:100%;" onclick="gerarExtrato('${f.id}')">Visualizar Extrato de Consumo</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+/* =========================================================
+   TABS PRINCIPAIS
+========================================================= */
+document.querySelectorAll('nav.tabs button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.tabpanel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    if(btn.dataset.tab === 'relatorios') renderReports();
+    if(btn.dataset.tab === 'lancamentos') renderSales();
+    if(btn.dataset.tab === 'config') renderConfig();
+    if(btn.dataset.tab === 'alunos') renderStudents();
+  });
+});
+
+function render_all(){
+  document.getElementById('todayLabel').textContent = 'Hoje: ' + fmtDate(todayStr());
+  document.getElementById('pdvDate').value = todayStr();
+  renderStudents();
+  renderProducts();
+  renderSales();
+  renderReports();
+  renderConfig();
+  renderPdvStudentFilterOptions();
+}
+
+/* =========================================================
+   PDV (VÁRIOS PRODUTOS E LANÇAMENTOS RETROATIVOS)
+========================================================= */
+const pdvSearch = document.getElementById('pdvSearch');
+pdvSearch.addEventListener('input', ()=>{
+  const q = pdvSearch.value.trim().toLowerCase();
+  const box = document.getElementById('pdvResults');
+  if(!q){ box.innerHTML=''; box.style.display='none'; return; }
+  const matches = DATA.students.filter(s =>
+    s.active !== false && (s.code.includes(q) || s.name.toLowerCase().includes(q))
+  ).slice(0,8);
+  if(!matches.length){ box.innerHTML = '<div class="muted" style="padding:10px 12px;">Nenhum aluno encontrado</div>'; box.style.display='block'; return; }
+  box.innerHTML = matches.map(s => `<div onclick="selectPdvStudent('${s.id}')"><span>${s.name} — ${s.className||''}</span><span class="code-pill">${s.code}</span></div>`).join('');
+  box.style.display='block';
+});
+
+function selectPdvStudent(id){
+  currentSale.studentId = id;
+  currentSale.items = [];
+  document.getElementById('pdvResults').style.display='none';
+  pdvSearch.value = '';
+  renderPdvStudentBox();
+  renderPdvProducts();
+  renderCart();
+  document.getElementById('pdvProdArea').style.display = 'block';
+}
+
+function renderPdvStudentBox(){
+  const box = document.getElementById('pdvStudentBox');
+  const s = studentById(currentSale.studentId);
+  if(!s){ box.innerHTML=''; return; }
+  const low = s.balance < 5;
+  box.innerHTML = `
+    <div class="student-ticket" style="margin-top:14px;">
+      <div class="code">#${s.code}</div>
+      <div class="name">${s.name}</div>
+      <div class="meta">${s.className || 'Sem turma'} ${s.limit ? '· limite diário ' + fmtMoney(s.limit) : ''}</div>
+      <div class="balance ${low?'low':''}">${fmtMoney(s.balance)}</div>
+    </div>`;
+}
+
+document.getElementById('pdvProdSearch').addEventListener('input', renderPdvProducts);
+
+function renderPdvProducts(){
+  const grid = document.getElementById('pdvProdGrid');
+  const s = studentById(currentSale.studentId);
+  const q = document.getElementById('pdvProdSearch').value.trim().toLowerCase();
+  const list = DATA.products.filter(p => p.active !== false && p.name.toLowerCase().includes(q));
+  if(!list.length){ grid.innerHTML = '<div class="muted">Nenhum produto cadastrado.</div>'; return; }
+  grid.innerHTML = list.map(p=>{
+    const blocked = s && (s.blockedIds||[]).includes(p.id);
+    const out = p.stock <= 0;
+    const cls = blocked ? 'blocked' : (out ? 'out' : '');
+    return `<button type="button" class="prod-card ${cls}" ${(blocked||out)?'disabled':''} onclick="addToCart('${p.id}')">
+      <div class="pname">${p.name}</div>
+      <div class="pprice">${fmtMoney(p.price)}</div>
+      <div class="pstock">${blocked ? 'bloqueado' : (out ? 'sem estoque' : 'estoque: ' + p.stock)}</div>
+    </button>`;
+  }).join('');
+}
+
+function addToCart(productId){
+  const p = productById(productId);
+  if(!p) return;
+  const inCartQty = currentSale.items.filter(i=>i.productId===productId).reduce((a,i)=>a+i.qty,0);
+  if(inCartQty >= p.stock){ showToast('Estoque insuficiente para ' + p.name, true); return; }
+  const existing = currentSale.items.find(i=>i.productId===productId);
+  if(existing) existing.qty += 1;
+  else currentSale.items.push({ productId, name:p.name, price:p.price, qty:1 });
+  renderCart();
+}
+
+function changeQty(productId, delta){
+  const item = currentSale.items.find(i=>i.productId===productId);
+  if(!item) return;
+  const p = productById(productId);
+  const newQty = item.qty + delta;
+  if(newQty <= 0){ currentSale.items = currentSale.items.filter(i=>i.productId!==productId); }
+  else if(p && newQty > p.stock){ showToast('Estoque insuficiente', true); return; }
+  else item.qty = newQty;
+  renderCart();
+}
+
+function renderCart(){
+  const box = document.getElementById('cartBox');
+  const s = studentById(currentSale.studentId);
+  if(!s || currentSale.items.length===0){
+    box.innerHTML = `<div class="empty"><div class="big">Comanda vazia</div><div>${s? 'Adicione produtos para '+s.name : 'Selecione um aluno e adicione produtos.'}</div></div>`;
+    return;
+  }
+  const total = currentSale.items.reduce((a,i)=>a+i.price*i.qty,0);
+  const dateVal = document.getElementById('pdvDate').value || todayStr();
+  const isRetro = dateVal !== todayStr();
+  const willBeNegative = (s.balance - total) < 0;
+  const blockedByBalance = willBeNegative && DATA.config.modo === 'prepago';
+  let limitWarning = '';
+  if(s.limit){
+    const spentToday = DATA.sales.filter(sa => sa.studentId===s.id && sa.date===dateVal).reduce((a,sa)=>a+sa.total,0);
+    if(spentToday + total > s.limit){
+      limitWarning = `<div class="badge bad" style="margin-top:8px;">Ultrapassa o limite diário de ${fmtMoney(s.limit)}</div>`;
+    }
+  }
+  box.innerHTML = `
+    <div class="cart">
+      ${currentSale.items.map(i=>`
+        <div class="cart-item">
+          <div>${i.name}<div class="muted">${fmtMoney(i.price)} un.</div></div>
+          <div class="qty-ctrl">
+            <button onclick="changeQty('${i.productId}',-1)">−</button>
+            <span>${i.qty}</span>
+            <button onclick="changeQty('${i.productId}',1)">+</button>
+          </div>
+        </div>`).join('')}
+      <div class="cart-total"><span>Total</span><span>${fmtMoney(total)}</span></div>
+      ${isRetro ? `<div class="badge retro" style="margin-top:10px;">Consumo retroativo para: ${fmtDate(dateVal)}</div>` : ''}
+      ${limitWarning}
+      ${blockedByBalance ? `<div class="badge bad" style="margin-top:8px;">Saldo insuficiente (modo pré-pago)</div>` : ''}
+      <button class="btn accent" style="width:100%; margin-top:14px;" ${blockedByBalance?'disabled':''} onclick="finalizeSale()">Finalizar venda</button>
+    </div>`;
+}
+
+function finalizeSale(){
+  const s = studentById(currentSale.studentId);
+  if(!s || !currentSale.items.length) return;
+  const total = currentSale.items.reduce((a,i)=>a+i.price*i.qty,0);
+  const dateVal = document.getElementById('pdvDate').value || todayStr();
+  if(DATA.config.modo === 'prepago' && (s.balance - total) < 0){
+    showToast('Saldo insuficiente para concluir a venda.', true); return;
+  }
+  currentSale.items.forEach(i=>{
+    const p = productById(i.productId);
+    if(p) p.stock = Math.max(0, p.stock - i.qty);
+  });
+  s.balance = +(s.balance - total).toFixed(2);
+  DATA.sales.push({
+    id: uid('venda'),
+    studentId: s.id,
+    items: currentSale.items.map(i=>({...i})),
+    total: +total.toFixed(2),
+    date: dateVal,
+    createdAt: new Date().toISOString()
+  });
+  saveData();
+  showToast('Venda registrada com sucesso!');
+  currentSale.items = [];
+  renderCart();
+  renderPdvProducts();
+  renderPdvStudentBox();
+  renderProducts();
+  renderSales();
+}
+
+/* =========================================================
+   ALUNOS (RESPONSÁVEIS E CADASTRO)
+========================================================= */
+document.getElementById('alunoSearch').addEventListener('input', renderStudents);
+
+function renderStudents(){
+  const q = document.getElementById('alunoSearch').value.trim().toLowerCase();
+  const tbody = document.getElementById('studentsTbody');
+  const list = DATA.students.filter(s => 
+    !q || 
+    s.name.toLowerCase().includes(q) || 
+    (s.className||'').toLowerCase().includes(q) || 
+    s.code.includes(q) ||
+    (s.respName||'').toLowerCase().includes(q)
+  );
+
+  if(!list.length){
+    tbody.innerHTML = `<tr><td colspan="8"><div class="empty"><div class="big">Nenhum aluno cadastrado</div><div>Clique em "Novo aluno" para começar.</div></div></td></tr>`;
+  } else {
+    tbody.innerHTML = list.map(s=>`
+      <tr>
+        <td><span class="code-pill">${s.code}</span></td>
+        <td><strong>${s.name}</strong></td>
+        <td>
+          <div style="font-size:12px;">${s.respName || '<span class="muted">Não informado</span>'}</div>
+          <div class="muted" style="font-size:11px;">${s.respCpf || ''}</div>
+        </td>
+        <td>${s.className||'—'}</td>
+        <td style="font-family:var(--font-mono); ${s.balance<0?'color:var(--danger); font-weight:600;':''}">${fmtMoney(s.balance)}</td>
+        <td>${s.limit ? fmtMoney(s.limit) : '—'}</td>
+        <td>${s.active===false ? '<span class="badge bad">Bloqueado</span>' : '<span class="badge good">Ativo</span>'}</td>
+        <td style="white-space:nowrap;">
+          <button class="btn sm ghost" onclick="openRechargeModal('${s.id}')" title="Adicionar saldo">+ R$</button>
+          <button class="icon" onclick="gerarExtrato('${s.id}')" title="Gerar Extrato p/ Responsável">📄</button>
+          <button class="icon" onclick="openStudentModal('${s.id}')" title="Editar dados">✎</button>
+          <button class="icon" onclick="toggleStudentActive('${s.id}')" title="Inativar/Ativar">⏻</button>
+        </td>
+      </tr>`).join('');
+  }
+}
+
+function openStudentModal(id){
+  document.getElementById('studentModalTitle').textContent = id ? 'Editar aluno' : 'Novo aluno';
+  const s = id ? studentById(id) : null;
+  document.getElementById('studentId').value = id || '';
+  document.getElementById('studentName').value = s ? s.name : '';
+  document.getElementById('studentClass').value = s ? (s.className||'') : '';
+  document.getElementById('studentCode').value = s ? s.code : genStudentCode();
+  document.getElementById('studentRespName').value = s ? (s.respName||'') : '';
+  document.getElementById('studentRespCpf').value = s ? (s.respCpf||'') : '';
+  document.getElementById('studentBalance').value = s ? s.balance : '';
+  document.getElementById('studentLimit').value = s ? (s.limit||'') : '';
+
+  const listDiv = document.getElementById('studentBlockedList');
+  const blockedIds = (s && s.blockedIds) ? s.blockedIds : [];
+  listDiv.innerHTML = DATA.products.map(p => `
+    <label>
+      <input type="checkbox" value="${p.id}" ${blockedIds.includes(p.id) ? 'checked' : ''}>
+      ${p.name}
+    </label>
+  `).join('');
+  openModalEl('studentModalBg');
+}
+
+function saveStudent(){
+  const id = document.getElementById('studentId').value;
+  const name = document.getElementById('studentName').value.trim();
+  const className = document.getElementById('studentClass').value.trim();
+  const code = document.getElementById('studentCode').value.trim();
+  const respName = document.getElementById('studentRespName').value.trim();
+  const respCpf = document.getElementById('studentRespCpf').value.trim();
+  const balance = parseFloat(document.getElementById('studentBalance').value) || 0;
+  const limit = parseFloat(document.getElementById('studentLimit').value) || null;
+
+  if(!name || !code){
+    showToast('Nome e código são obrigatórios.', true);
+    return;
+  }
+
+  const blockedIds = Array.from(document.querySelectorAll('#studentBlockedList input:checked')).map(el => el.value);
+
+  if(id){
+    const s = studentById(id);
+    if(s){
+      s.name = name; s.className = className; s.code = code; s.respName = respName; s.respCpf = respCpf;
+      s.balance = balance; s.limit = limit; s.blockedIds = blockedIds;
+    }
+  } else {
+    DATA.students.push({
+      id: uid('aluno'), name, className, code, respName, respCpf, balance, limit, blockedIds, active: true
+    });
+  }
+  saveData();
+  closeModal('studentModalBg');
+  renderStudents();
+  showToast('Cadastro de aluno atualizado.');
+}
+
+function toggleStudentActive(id){
+  const s = studentById(id); if(!s) return;
+  s.active = s.active === false ? true : false;
+  saveData(); renderStudents();
+}
+
+/* =========================================================
+   EXTRATO DO ALUNO (DETALHADO E PARA IMPRESSÃO)
+========================================================= */
+function gerarExtrato(studentId){
+  const s = studentById(studentId);
+  if(!s) return;
+
+  const vendas = DATA.sales.filter(v => v.studentId === studentId);
+  const recargas = (DATA.recharges || []).filter(r => r.studentId === studentId);
+
+  const historico = [];
+  vendas.forEach(v => {
+    historico.push({
+      data: v.date,
+      tipo: 'Consumo',
+      descricao: v.items.map(i => `${i.qty}x ${i.name}`).join(', '),
+      valor: -v.total,
+      realizadoEm: v.createdAt
+    });
+  });
+
+  recargas.forEach(r => {
+    historico.push({
+      data: r.date,
+      tipo: 'Crédito Adicionado',
+      descricao: 'Recarga de saldo na cantina',
+      valor: r.amount,
+      realizadoEm: r.date + "T00:00:00"
+    });
+  });
+
+  historico.sort((a,b) => new Date(b.realizadoEm) - new Date(a.realizadoEm));
+
+  let historicoHtml = '';
+  if (historico.length === 0) {
+    historicoHtml = `<tr><td colspan="4" class="empty">Sem movimentações neste período.</td></tr>`;
+  } else {
+    historicoHtml = historico.map(h => {
+      const corValor = h.valor < 0 ? 'color: var(--danger);' : 'color: var(--good);';
+      const sinal = h.valor < 0 ? '' : '+';
+      return `
+        <tr>
+          <td>${fmtDate(h.data)}</td>
+          <td><strong>${h.tipo}</strong></td>
+          <td class="muted" style="font-size:12px;">${h.descricao}</td>
+          <td style="font-family:var(--font-mono); font-weight:600; ${corValor}">${sinal}${fmtMoney(Math.abs(h.valor))}</td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  const container = document.getElementById('extratoArea');
+  container.innerHTML = `
+    <div class="extrato-recibo">
+      <h4>${DATA.config.nome}</h4>
+      <p style="text-align:center; font-size:13px; margin:-5px 0 15px;" class="muted">EXTRATO DETALHADO DE CONSUMO</p>
+      
+      <div class="dados-linha"><span>Código do Aluno:</span><strong>#${s.code}</strong></div>
+      <div class="dados-linha"><span>Nome do Aluno:</span><strong>${s.name}</strong></div>
+      <div class="dados-linha"><span>Turma:</span><strong>${s.className || 'Não Informada'}</strong></div>
+      <div class="dados-linha"><span>Responsável:</span><strong>${s.respName || 'Não Informado'}</strong></div>
+      <div class="dados-linha"><span>CPF do Responsável:</span><strong>${s.respCpf || 'Não Informado'}</strong></div>
+      <div class="dados-linha" style="border-bottom: 2px solid var(--line); margin-bottom: 15px;">
+        <span>Saldo Atual em Conta:</span><strong style="font-family:var(--font-mono); font-size:16px;">${fmtMoney(s.balance)}</strong>
+      </div>
+      
+      <h5 style="font-family:var(--font-display); margin:15px 0 8px; font-size:15px; color:var(--primary);">Movimentações Recentes</h5>
+      <table style="width:100%; font-size:12px;">
+        <thead>
+          <tr>
+            <th style="padding:4px 6px;">Data</th>
+            <th style="padding:4px 6px;">Tipo</th>
+            <th style="padding:4px 6px;">Descrição</th>
+            <th style="padding:4px 6px;">Valor</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${historicoHtml}
+        </tbody>
+      </table>
+    </div>
+  `;
+  openModalEl('extratoModalBg');
+}
+
+/* =========================================================
+   RECARGA E CRÉDITO
+========================================================= */
+function openRechargeModal(id){
+  const s = studentById(id);
+  if(!s) return;
+  document.getElementById('rechargeStudentId').value = id;
+  document.getElementById('rechargeStudentName').textContent = `${s.name} (${s.className || 'Sem turma'})`;
+  document.getElementById('rechargeAmount').value = '';
+  openModalEl('rechargeModalBg');
+}
+
+function confirmRecharge(){
+  const id = document.getElementById('rechargeStudentId').value;
+  const val = parseFloat(document.getElementById('rechargeAmount').value);
+  const s = studentById(id);
+  if(!s || isNaN(val) || val <= 0){
+    showToast('Digite um valor de recarga válido.', true);
+    return;
+  }
+  s.balance = +(s.balance + val).toFixed(2);
+  
+  if(!DATA.recharges) DATA.recharges = [];
+  DATA.recharges.push({
+    id: uid('recarga'),
+    studentId: id,
+    amount: val,
+    date: todayStr()
+  });
+
+  saveData();
+  closeModal('rechargeModalBg');
+  renderStudents();
+  if(currentSale.studentId === id) renderPdvStudentBox();
+  showToast(`Crédito de ${fmtMoney(val)} adicionado.`);
+}
+
+/* =========================================================
+   PRODUTOS
+========================================================= */
+document.getElementById('produtoSearch').addEventListener('input', renderProducts);
+
+function renderProducts(){
+  const q = document.getElementById('produtoSearch').value.trim().toLowerCase();
+  const tbody = document.getElementById('productsTbody');
+  const list = DATA.products.filter(p => !q || p.name.toLowerCase().includes(q) || (p.category||'').toLowerCase().includes(q));
+  if(!list.length){
+    tbody.innerHTML = `<tr><td colspan="6"><div class="empty"><div class="big">Nenhum produto cadastrado</div><div>Adicione produtos.</div></div></td></tr>`;
+  } else {
+    tbody.innerHTML = list.map(p=>`
+      <tr>
+        <td><strong>${p.name}</strong></td>
+        <td>${p.category||'—'}</td>
+        <td style="font-family:var(--font-mono);">${fmtMoney(p.price)}</td>
+        <td>${p.stock}</td>
+        <td>${p.active===false ? '<span class="badge bad">Inativo</span>' : '<span class="badge good">Ativo</span>'}</td>
+        <td>
+          <button class="icon" onclick="openProductModal('${p.id}')">✎</button>
+          <button class="icon" onclick="toggleProductActive('${p.id}')">⏻</button>
+        </td>
+      </tr>`).join('');
+  }
+}
+
+function openProductModal(id){
+  document.getElementById('productModalTitle').textContent = id ? 'Editar produto' : 'Novo produto';
+  const p = id ? productById(id) : null;
+  document.getElementById('productId').value = id || '';
+  document.getElementById('productName').value = p ? p.name : '';
+  document.getElementById('productCategory').value = p ? (p.category||'') : '';
+  document.getElementById('productPrice').value = p ? p.price : '';
+  document.getElementById('productStock').value = p ? p.stock : '';
+  openModalEl('productModalBg');
+}
+
+function saveProduct(){
+  const id = document.getElementById('productId').value;
+  const name = document.getElementById('productName').value.trim();
+  const category = document.getElementById('productCategory').value.trim();
+  const price = parseFloat(document.getElementById('productPrice').value) || 0;
+  const stock = parseInt(document.getElementById('productStock').value) || 0;
+
+  if(!name || price <= 0){
+    showToast('Nome e preço são obrigatórios.', true); return;
+  }
+  if(id){
+    const p = productById(id);
+    if(p){ p.name=name; p.category=category; p.price=price; p.stock=stock; }
+  } else {
+    DATA.products.push({ id: uid('produto'), name, category, price, stock, active:true });
+  }
+  saveData();
+  closeModal('productModalBg');
+  renderProducts();
+  showToast('Produto salvo.');
+}
+
+function toggleProductActive(id){
+  const p = productById(id); if(!p) return;
+  p.active = p.active === false ? true : false;
+  saveData(); renderProducts();
+}
+
+/* =========================================================
+   LANÇAMENTOS E FILTROS
+========================================================= */
+function renderPdvStudentFilterOptions(){
+  const sel = document.getElementById('filtroAluno');
+  sel.innerHTML = '<option value="">Todos</option>' + DATA.students.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+}
+
+document.getElementById('filtroAluno').addEventListener('change', renderSales);
+document.getElementById('filtroDe').addEventListener('change', renderSales);
+document.getElementById('filtroAte').addEventListener('change', renderSales);
+document.getElementById('filtroRetro').addEventListener('change', renderSales);
+
+function clearFilters(){
+  document.getElementById('filtroAluno').value = '';
+  document.getElementById('filtroDe').value = '';
+  document.getElementById('filtroAte').value = '';
+  document.getElementById('filtroRetro').value = '';
+  renderSales();
+}
+
+function renderSales(){
+  const fAluno = document.getElementById('filtroAluno').value;
+  const fDe = document.getElementById('filtroDe').value;
+  const fAte = document.getElementById('filtroAte').value;
+  const fRetro = document.getElementById('filtroRetro').value;
+  const tbody = document.getElementById('salesTbody');
+  
+  let list = DATA.sales;
+  if(fAluno) list = list.filter(s => s.studentId === fAluno);
+  if(fDe) list = list.filter(s => s.date >= fDe);
+  if(fAte) list = list.filter(s => s.date <= fAte);
+  if(fRetro === '1') list = list.filter(s => s.date !== s.createdAt.slice(0,10));
+
+  list = [...list].sort((a,b) => b.createdAt.localeCompare(a.createdAt));
+
+  if(!list.length){
+    tbody.innerHTML = `<tr><td colspan="6"><div class="empty">Nenhum lançamento encontrado.</div></td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = list.map(s => {
+    const student = studentById(s.studentId);
+    const itemSummary = s.items.map(i => `${i.qty}x ${i.name}`).join(', ');
+    const isRetro = s.date !== s.createdAt.slice(0,10);
+    return `
+      <tr>
+        <td><strong>${student ? student.name : 'Ex-aluno'}</strong></td>
+        <td>${itemSummary}</td>
+        <td style="font-family:var(--font-mono);">${fmtMoney(s.total)}</td>
+        <td>${fmtDate(s.date)} ${isRetro ? '<span class="badge retro">Retroativo</span>' : ''}</td>
+        <td class="muted">${fmtDate(s.createdAt.slice(0,10))} às ${s.createdAt.slice(11,16)}</td>
+        <td><button class="icon delete" onclick="deleteSale('${s.id}')">✕</button></td>
+      </tr>`;
+  }).join('');
+}
+
+function deleteSale(saleId){
+  if(!confirm('Deseja realmente excluir/estornar esta venda?')) return;
+  const index = DATA.sales.findIndex(s => s.id === saleId);
+  if(index===-1) return;
+  const sale = DATA.sales[index];
+  const s = studentById(sale.studentId);
+  if(s) s.balance = +(s.balance + sale.total).toFixed(2);
+  sale.items.forEach(i=>{
+    const p = productById(i.productId);
+    if(p) p.stock += i.qty;
+  });
+  DATA.sales.splice(index,1);
+  saveData();
+  renderSales();
+  renderStudents();
+  renderProducts();
+  showToast('Lançamento estornado!');
+}
+
+/* =========================================================
+   RELATÓRIOS
+========================================================= */
+function renderReports(){
+  const faturado = DATA.sales.reduce((a,s)=>a+s.total,0);
+  const estoqueBaixo = DATA.products.filter(p => p.active!==false && p.stock <= 5).length;
+  const saldoCustodia = DATA.students.reduce((a,s)=>a+s.balance,0);
+
+  document.getElementById('kpiBox').innerHTML = `
+    <div class="kpi"><div class="label">Total de Vendas</div><div class="value">${fmtMoney(faturado)}</div></div>
+    <div class="kpi"><div class="label">Alunos Ativos</div><div class="value">${DATA.students.filter(s=>s.active!==false).length}</div></div>
+    <div class="kpi"><div class="label">Saldo em Custódia</div><div class="value">${fmtMoney(saldoCustodia)}</div></div>
+    <div class="kpi"><div class="label">Estoque Crítico (≤5)</div><div class="value">${estoqueBaixo} prod.</div></div>
+  `;
+
+  const aMap = {};
+  DATA.sales.forEach(s => aMap[s.studentId] = (aMap[s.studentId]||0) + s.total);
+  const repAlunos = DATA.students.map(s => ({ name: s.name, total: aMap[s.id]||0, compras: DATA.sales.filter(v=>v.studentId===s.id).length }))
+    .sort((a,b)=>b.total - a.total).slice(0,5);
+  document.getElementById('repAlunoTbody').innerHTML = repAlunos.map(a => `<tr><td><strong>${a.name}</strong></td><td>${a.compras}</td><td style="font-family:var(--font-mono);">${fmtMoney(a.total)}</td></tr>`).join('');
+
+  const pMap = {};
+  DATA.sales.forEach(s => s.items.forEach(i => {
+    if(!pMap[i.productId]) pMap[i.productId] = { name: i.name, qty: 0, total: 0 };
+    pMap[i.productId].qty += i.qty;
+    pMap[i.productId].total += (i.qty * i.price);
+  }));
+  const repProds = Object.values(pMap).sort((a,b)=>b.qty - a.qty).slice(0,5);
+  document.getElementById('repProdTbody').innerHTML = repProds.map(p => `<tr><td><strong>${p.name}</strong></td><td>${p.qty} un.</td><td style="font-family:var(--font-mono);">${fmtMoney(p.total)}</td></tr>`).join('');
+
+  const repEstoque = DATA.products.filter(p=>p.active!==false && p.stock<=5);
+  document.getElementById('repEstoqueTbody').innerHTML = repEstoque.map(p => `<tr><td><strong>${p.name}</strong></td><td><span class="badge bad">${p.stock} un.</span></td></tr>`).join('');
+}
+
+/* =========================================================
+   CONFIGURAÇÕES
+========================================================= */
+function renderConfig(){
+  document.getElementById('cfgModo').value = DATA.config.modo || 'prepago';
+  document.getElementById('cfgNome').value = DATA.config.nome || 'Minha Cantina';
+  document.getElementById('cfgAdminPass').value = DATA.config.adminPass || '1234';
+}
+
+function saveConfig(){
+  DATA.config.modo = document.getElementById('cfgModo').value;
+  DATA.config.nome = document.getElementById('cfgNome').value.trim();
+  DATA.config.adminPass = document.getElementById('cfgAdminPass').value.trim();
+  saveData();
+  document.querySelector('.brand h1').innerHTML = `${DATA.config.nome || 'Cantina'}<span class="dot">.</span>em Dia`;
+  showToast('Configurações salvas!');
+}
+
+/* =========================================================
+   BOOTSTRAP / INICIALIZAÇÃO
+========================================================= */
+window.onload = () => {
+  setTimeout(async () => {
+    if(typeof window.storage === 'undefined') {
+      window.storage = {
+        get: () => Promise.resolve({ value: null }),
+        set: () => Promise.resolve()
+      };
+    }
+    await loadData();
+    
+    if(!DATA.students.length && !DATA.products.length){
+      DATA.products = [
+        { id: 'p1', name: 'Suco de Laranja Natural', category: 'Bebidas', price: 6.50, stock: 45, active: true },
+        { id: 'p2', name: 'Misto Quente Integral', category: 'Lanches', price: 8.50, stock: 20, active: true },
+        { id: 'p3', name: 'Pão de Queijo Redondo', category: 'Salgados', price: 4.00, stock: 3, active: true },
+        { id: 'p4', name: 'Cookie Choc', category: 'Doces', price: 5.00, stock: 12, active: true }
+      ];
+      DATA.students = [
+        { id: 's1', name: 'Ana Beatriz Souza', className: '8º Ano A', code: '1002', respName: 'Mariana de Souza', respCpf: '111.222.333-44', balance: 45.00, limit: 25.00, blockedIds: [], active: true },
+        { id: 's2', name: 'Carlos Henrique Lima', className: '9º Ano B', code: '4821', respName: 'Roberto Lima', respCpf: '999.888.777-66', balance: 8.50, limit: null, blockedIds: ['p4'], active: true }
+      ];
+      DATA.recharges = [
+        { id: 'r1', studentId: 's1', amount: 45.00, date: todayStr() }
+      ];
+      saveData();
+      render_all();
+    }
+  }, 100);
+};
+</script>
+</body>
+</html>

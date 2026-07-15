@@ -7,7 +7,30 @@
   "background_color": "#F3F1E8",
   "theme_color": "#1F4735",
   "orientation": "portrait-primary",
+  "icons": [{
+  "name": "Kantina Casa da Gilda",
+  "short_name": "Gilda",
+  "description": "Controle de consumo e saldo escolar",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#F3F1E8",
+  "theme_color": "#1F4735",
+  "orientation": "portrait-primary",
   "icons": [
+    {
+      "src": "./logo192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./logo512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
     {
       "src": "https://cdn-icons-png.flaticon.com/512/3081/3081944.png",
       "sizes": "192x192",

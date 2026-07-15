@@ -379,10 +379,10 @@ tr:hover td{ background:#FAF9F3; }
     </div>
 
     <!-- Formulário Operador -->
-    <div id="formOperador">
-      <div class="field">
-        <label>Senha administrativa</label>
-        <input type="password" id="opPassword" placeholder=
+   def __init__(self, nome, usuario, senha):
+        self.nome = nome
+        self.usuario = usuario
+        self.senha = senha # CORRETO: Usa a senha passada na criação
       </div>
       <button class="btn" style="width: 100%; margin-top: 8px;" onclick="tryLoginOperador()">Entrar no Sistema</button>
     </div>

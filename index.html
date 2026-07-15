@@ -1,1584 +1,1410 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<!-- Configurações PWA -->
-<link rel="manifest" href="./manifest.json">
-<meta name="theme-color" content="#1F4735">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="apple-touch-icon" href="HTML">
-
-<script>
-  // Registra o service worker se o navegador suportar
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js')
-        .then(reg => console.log('Service Worker registrado com sucesso:', reg.scope))
-        .catch(err => console.error('Falha ao registrar o Service Worker:', err));
-    });
-  }
-</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cantina em Dia</title>
+<title>Kantina Casa da Gilda — Sistema de Cantina Escolar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
-
 :root{
-  --bg: #F3F1E8;
-  --surface: #FFFFFF;
-  --ink: #22291E;
-  --ink-soft: #5B6355;
-  --line: #DCD7C4;
-  --primary: #1F4735;
-  --primary-soft: #2C5C46;
-  --accent: #E3A73E;
-  --accent-ink: #4A3005;
-  --danger: #B23A2E;
-  --danger-soft: #F6E4E1;
-  --good: #2C6E49;
-  --good-soft: #E3EFE4;
-  --radius: 10px;
-  --font-display: 'Fraunces', Georgia, serif;
-  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-mono: 'IBM Plex Mono', 'SFMono-Regular', Menlo, monospace;
+  --bg:#F3F6F4;
+  --surface:#FFFFFF;
+  --ink:#152420;
+  --ink-soft:#516059;
+  --ink-faint:#8B9A93;
+  --primary:#1F4D3F;
+  --primary-dark:#123328;
+  --primary-soft:#E4EEE9;
+  --accent:#F0A63A;
+  --accent-dark:#CE8620;
+  --coral:#E15C42;
+  --coral-soft:#FBE6E1;
+  --blue-soft:#E5EEF7;
+  --line:#DEE6E1;
+  --radius:14px;
+  --radius-sm:9px;
+  --font-display:'Fraunces',serif;
+  --font-body:'Manrope',sans-serif;
+  --font-mono:'JetBrains Mono',monospace;
+  --shadow:0 1px 2px rgba(21,36,32,.04), 0 8px 24px -12px rgba(21,36,32,.18);
 }
-
-*{box-sizing:border-box;}
-html,body{margin:0;padding:0;}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
 body{
+  font-family:var(--font-body);
   background:var(--bg);
   color:var(--ink);
-  font-family:var(--font-body);
   -webkit-font-smoothing:antialiased;
+  min-height:100vh;
+}
+#app{min-height:100vh;padding-bottom:40px}
+h1,h2,h3,.disp{font-family:var(--font-display);letter-spacing:-.01em}
+.mono{font-family:var(--font-mono)}
+a{color:inherit}
+button{font-family:var(--font-body);cursor:pointer}
+input,select,textarea{font-family:var(--font-body)}
+::selection{background:var(--accent);color:#1c1200}
+
+/* ---------- layout helpers ---------- */
+.container{max-width:1180px;margin:0 auto;padding:0 22px}
+.center-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.pad{padding:22px}
+.row{display:flex;align-items:center}
+.gap8{gap:8px}.gap12{gap:12px}.gap16{gap:16px}.gap20{gap:20px}
+.between{justify-content:space-between}
+.wrap{flex-wrap:wrap}
+.grow{flex:1}
+.muted{color:var(--ink-soft)}
+.faint{color:var(--ink-faint)}
+.small{font-size:12.5px}
+.mt8{margin-top:8px}.mt12{margin-top:12px}.mt16{margin-top:16px}.mt20{margin-top:20px}.mt24{margin-top:24px}.mt32{margin-top:32px}
+.mb8{margin-bottom:8px}.mb12{margin-bottom:12px}.mb16{margin-bottom:16px}.mb20{margin-bottom:20px}
+
+/* ---------- buttons & inputs ---------- */
+.btn{
+  border:none;border-radius:10px;padding:11px 18px;font-weight:700;font-size:14.5px;
+  display:inline-flex;align-items:center;gap:8px;transition:.15s transform,.15s box-shadow,.15s opacity;
+  line-height:1.1;
+}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-primary:hover{background:var(--primary-dark)}
+.btn-accent{background:var(--accent);color:#241900}
+.btn-accent:hover{background:var(--accent-dark)}
+.btn-coral{background:var(--coral);color:#fff}
+.btn-ghost{background:transparent;color:var(--primary);border:1.5px solid var(--line)}
+.btn-ghost:hover{border-color:var(--primary)}
+.btn-sm{padding:7px 12px;font-size:13px;border-radius:8px}
+.btn-icon{padding:8px;border-radius:8px}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.btn-block{width:100%;justify-content:center}
+.link-btn{background:none;border:none;color:var(--primary);font-weight:700;text-decoration:underline;padding:0;font-size:inherit}
+
+label{display:block;font-size:12.5px;font-weight:700;color:var(--ink-soft);margin-bottom:5px;text-transform:uppercase;letter-spacing:.03em}
+.field{margin-bottom:14px}
+input[type=text],input[type=password],input[type=number],input[type=date],input[type=email],input[type=search],select,textarea{
+  width:100%;padding:11px 13px;border:1.5px solid var(--line);border-radius:9px;font-size:14.5px;background:#fff;color:var(--ink);
+}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--primary);outline-offset:1px;border-color:var(--primary)}
+.hint{font-size:12px;color:var(--ink-faint);margin-top:4px}
+.err{font-size:12.5px;color:var(--coral);margin-top:4px;font-weight:600}
+
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:99px;text-transform:uppercase;letter-spacing:.03em}
+.badge-green{background:var(--primary-soft);color:var(--primary)}
+.badge-amber{background:#FBF0DC;color:var(--accent-dark)}
+.badge-coral{background:var(--coral-soft);color:var(--coral)}
+.badge-blue{background:var(--blue-soft);color:#2A5C8C}
+
+/* ---------- login ---------- */
+.login-wrap{width:100%;max-width:920px;display:grid;grid-template-columns:1fr 1fr;border-radius:20px;overflow:hidden;box-shadow:0 20px 60px -20px rgba(18,51,40,.35)}
+.login-hero{background:linear-gradient(160deg,var(--primary) 0%,var(--primary-dark) 100%);color:#fff;padding:44px 38px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden}
+.login-hero:before{content:"";position:absolute;right:-60px;top:-60px;width:220px;height:220px;border-radius:50%;background:rgba(240,166,58,.18)}
+.login-hero:after{content:"";position:absolute;left:-40px;bottom:-70px;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,.06)}
+.login-logo{font-family:var(--font-display);font-size:28px;font-weight:700;position:relative;z-index:1}
+.login-logo span{color:var(--accent)}
+.login-tag{font-size:15px;line-height:1.55;opacity:.88;margin-top:14px;max-width:280px;position:relative;z-index:1}
+.ticket-mini{position:relative;z-index:1;background:rgba(255,255,255,.08);border:1px dashed rgba(255,255,255,.35);border-radius:12px;padding:14px 16px;margin-top:28px}
+.ticket-mini .t-label{font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;opacity:.7}
+.ticket-mini .t-code{font-family:var(--font-mono);font-size:20px;font-weight:700;color:var(--accent);margin-top:4px}
+.login-form-side{background:#fff;padding:44px 38px;display:flex;flex-direction:column;justify-content:center}
+.tabbar{display:flex;background:var(--bg);border-radius:10px;padding:4px;margin-bottom:22px}
+.tabbar button{flex:1;border:none;background:transparent;padding:9px;border-radius:7px;font-weight:700;font-size:13.5px;color:var(--ink-soft)}
+.tabbar button.active{background:#fff;color:var(--primary);box-shadow:var(--shadow)}
+
+/* ---------- app shell ---------- */
+.topbar{background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
+.topbar-inner{max-width:1180px;margin:0 auto;padding:0 22px;height:62px;display:flex;align-items:center;justify-content:space-between}
+.brand{font-family:var(--font-display);font-weight:700;font-size:20px;color:var(--primary);display:flex;align-items:center;gap:8px}
+.brand span{color:var(--accent-dark)}
+.nav{display:flex;gap:2px}
+.nav button{background:transparent;border:none;padding:9px 13px;border-radius:8px;font-weight:700;font-size:13.5px;color:var(--ink-soft)}
+.nav button.active{background:var(--primary-soft);color:var(--primary)}
+.nav button:hover{color:var(--primary)}
+.userchip{display:flex;align-items:center;gap:10px;font-size:13px}
+.avatar{width:32px;height:32px;border-radius:50%;background:var(--accent);color:#241900;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px}
+.page{max-width:1180px;margin:0 auto;padding:26px 22px 60px}
+.page-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;flex-wrap:wrap;gap:12px}
+.page-head h1{font-size:26px;margin:0;color:var(--primary-dark)}
+.page-head p{margin:4px 0 0;color:var(--ink-soft);font-size:14px}
+
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-faint);padding:10px 12px;border-bottom:1.5px solid var(--line)}
+td{padding:12px;border-bottom:1px solid var(--line);font-size:14px;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+.table-wrap{overflow-x:auto}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(15,28,24,.55);display:flex;align-items:center;justify-content:center;z-index:100;padding:20px}
+.modal{background:#fff;border-radius:16px;max-width:560px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 30px 80px rgba(0,0,0,.35)}
+.modal-head{display:flex;justify-content:space-between;align-items:center;padding:20px 24px;border-bottom:1px solid var(--line)}
+.modal-head h3{margin:0;font-size:19px}
+.modal-body{padding:22px 24px}
+.close-x{background:none;border:none;font-size:20px;color:var(--ink-faint);padding:4px}
+
+.grid-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
+.prod-card{border:1.5px solid var(--line);border-radius:12px;overflow:hidden;background:#fff;cursor:pointer;transition:.15s border-color,.15s transform;text-align:left;padding:0}
+.prod-card:hover{border-color:var(--accent);transform:translateY(-2px)}
+.prod-card.blocked{opacity:.4;cursor:not-allowed}
+.prod-card.blocked:hover{transform:none;border-color:var(--line)}
+.prod-thumb{width:100%;height:88px;background:var(--primary-soft) center/cover no-repeat;display:flex;align-items:center;justify-content:center;font-size:26px;color:var(--primary)}
+.prod-body{padding:9px 10px}
+.prod-name{font-size:13px;font-weight:700;line-height:1.25;margin-bottom:3px}
+.prod-price{font-family:var(--font-mono);font-size:13px;color:var(--primary);font-weight:700}
+
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border:1.5px solid var(--line);background:#fff;padding:7px 14px;border-radius:99px;font-size:13px;font-weight:700;color:var(--ink-soft)}
+.chip.active{background:var(--primary);border-color:var(--primary);color:#fff}
+
+.cart-line{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--line)}
+.cart-line:last-child{border-bottom:none}
+.qtybtn{width:24px;height:24px;border-radius:6px;border:1.5px solid var(--line);background:#fff;font-weight:800;line-height:1}
+
+.ticket{background:#fff;border-radius:12px;position:relative;border:1.5px solid var(--line)}
+.ticket:before,.ticket:after{content:"";position:absolute;top:50%;transform:translateY(-50%);width:18px;height:18px;background:var(--bg);border-radius:50%;border:1.5px solid var(--line)}
+.ticket:before{left:-10px}.ticket:after{right:-10px}
+
+.empty-state{text-align:center;padding:50px 20px;color:var(--ink-faint)}
+.empty-state .ic{font-size:36px;margin-bottom:10px}
+
+.toast-root{position:fixed;bottom:20px;right:20px;z-index:200;display:flex;flex-direction:column;gap:10px}
+.toast{background:var(--primary-dark);color:#fff;padding:13px 18px;border-radius:10px;font-size:13.5px;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,.25);animation:slideIn .2s ease-out;max-width:320px}
+.toast.err{background:var(--coral)}
+@keyframes slideIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+.kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+.kpi .v{font-family:var(--font-mono);font-size:24px;font-weight:700;color:var(--primary-dark)}
+.kpi .l{font-size:12px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.03em;margin-top:2px}
+
+.child-card{border:1px solid var(--line);border-radius:14px;padding:18px;background:#fff}
+.saldo-big{font-family:var(--font-mono);font-size:30px;font-weight:700;color:var(--primary)}
+.saldo-big.neg{color:var(--coral)}
+
+.thumb-upload{width:84px;height:84px;border-radius:10px;border:1.5px dashed var(--line);display:flex;align-items:center;justify-content:center;overflow:hidden;background:var(--bg);cursor:pointer;flex-shrink:0}
+.thumb-upload img{width:100%;height:100%;object-fit:cover}
+
+.checklist{max-height:180px;overflow-y:auto;border:1.5px solid var(--line);border-radius:9px;padding:8px}
+.checklist label{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:500;text-transform:none;letter-spacing:0;padding:5px 3px;color:var(--ink);cursor:pointer}
+.checklist input{width:auto}
+
+.child-row-form{border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:10px;background:var(--bg)}
+
+@media(max-width:760px){
+  .login-wrap{grid-template-columns:1fr}
+  .login-hero{padding:30px 26px}
+  .nav{display:none}
+  .topbar-inner{height:auto;padding:12px 16px;flex-wrap:wrap;gap:10px}
 }
 
-::selection{ background: var(--accent); color:var(--accent-ink); }
-
-.app{ max-width:1180px; margin:0 auto; padding:0 20px 60px; }
-
-/* ---------- TELA DE LOGIN ---------- */
-.login-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  padding: 20px;
-}
-.login-card {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 32px;
-  width: 100%;
-  max-width: 400px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-}
-.login-tabs {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 24px;
-  border-bottom: 2px solid var(--line);
-}
-.login-tab {
-  flex: 1;
-  background: none;
-  border: none;
-  padding: 10px;
-  font-weight: 600;
-  font-size: 14px;
-  color: var(--ink-soft);
-  cursor: pointer;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -2px;
-}
-.login-tab.active {
-  color: var(--primary);
-  border-bottom-color: var(--accent);
-}
-
-/* ---------- HEADER ---------- */
-header.top{
-  padding:28px 20px 0;
-  max-width:1180px;
-  margin:0 auto;
-}
-.brand{
-  display:flex; align-items:baseline; gap:12px; flex-wrap:wrap;
-}
-.brand h1{
-  font-family:var(--font-display);
-  font-weight:700;
-  font-size:32px;
-  margin:0;
-  color:var(--primary);
-  letter-spacing:-0.01em;
-}
-.brand .dot{ color:var(--accent); }
-.brand .tagline{
-  font-size:13px;
-  color:var(--ink-soft);
-  font-family:var(--font-mono);
-  letter-spacing:0.02em;
-}
-.datebar{
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top:4px;
-  font-size:13px;
-  color:var(--ink-soft);
-}
-
-nav.tabs{
-  display:flex;
-  gap:4px;
-  margin-top:22px;
-  border-bottom:2px solid var(--line);
-  overflow-x:auto;
-}
-nav.tabs button{
-  font-family:var(--font-body);
-  font-weight:600;
-  font-size:14px;
-  background:none;
-  border:none;
-  padding:10px 16px 12px;
-  color:var(--ink-soft);
-  cursor:pointer;
-  border-bottom:2px solid transparent;
-  margin-bottom:-2px;
-  white-space:nowrap;
-  transition:color .15s;
-}
-nav.tabs button:hover{ color:var(--primary); }
-nav.tabs button.active{
-  color:var(--primary);
-  border-bottom-color:var(--accent);
-}
-
-main{ padding-top:24px; }
-.tabpanel{ display:none; }
-.tabpanel.active{ display:block; animation:fade .18s ease; }
-@keyframes fade{ from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:none;} }
-
-/* ---------- GENERIC ---------- */
-.card{
-  background:var(--surface);
-  border:1px solid var(--line);
-  border-radius:var(--radius);
-  padding:18px;
-}
-.grid2{ display:grid; grid-template-columns: 1.1fr 0.9fr; gap:18px; align-items:start; }
-@media (max-width:880px){ .grid2{ grid-template-columns:1fr; } }
-
-.section-title{
-  font-family:var(--font-display);
-  font-weight:600;
-  font-size:19px;
-  margin:0 0 12px;
-  color:var(--primary);
-}
-.muted{ color:var(--ink-soft); font-size:13px; }
-
-label{ display:block; font-size:12px; font-weight:600; color:var(--ink-soft); margin-bottom:4px; text-transform:uppercase; letter-spacing:0.03em; }
-input, select{
-  width:100%;
-  font-family:var(--font-body);
-  font-size:14px;
-  padding:9px 10px;
-  border:1.5px solid var(--line);
-  border-radius:7px;
-  background:#fff;
-  color:var(--ink);
-}
-input:focus, select:focus{ outline:none; border-color:var(--primary-soft); }
-.field{ margin-bottom:12px; }
-.row{ display:flex; gap:10px; }
-.row > *{ flex:1; }
-
-button.btn{
-  font-family:var(--font-body);
-  font-weight:600;
-  font-size:14px;
-  padding:10px 16px;
-  border-radius:7px;
-  border:1.5px solid var(--primary);
-  background:var(--primary);
-  color:#fff;
-  cursor:pointer;
-  transition:transform .08s, opacity .15s;
-}
-button.btn:hover{ opacity:0.92; }
-button.btn:active{ transform:scale(0.98); }
-button.btn.ghost{ background:transparent; color:var(--primary); }
-button.btn.accent{ background:var(--accent); border-color:var(--accent); color:var(--accent-ink); }
-button.btn.danger{ background:transparent; border-color:var(--danger); color:var(--danger); }
-button.btn.sm{ padding:6px 10px; font-size:12.5px; }
-button.btn:disabled{ opacity:0.45; cursor:not-allowed; }
-button.icon{
-  background:none; border:none; cursor:pointer; color:var(--ink-soft); font-size:15px; padding:4px 6px; border-radius:6px;
-}
-button.icon:hover{ background:var(--bg); color:var(--primary); }
-button.icon.delete:hover{ color:var(--danger); }
-
-table{ width:100%; border-collapse:collapse; font-size:13.5px; }
-th{
-  text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:0.03em;
-  color:var(--ink-soft); border-bottom:2px solid var(--line); padding:8px 10px; font-weight:700;
-}
-td{ padding:9px 10px; border-bottom:1px solid var(--line); vertical-align:middle; }
-tr:last-child td{ border-bottom:none; }
-tr:hover td{ background:#FAF9F3; }
-
-.badge{
-  display:inline-block; padding:2px 9px; border-radius:20px; font-size:11.5px; font-weight:600;
-}
-.badge.good{ background:var(--good-soft); color:var(--good); }
-.badge.bad{ background:var(--danger-soft); color:var(--danger); }
-.badge.neutral{ background:#EFEEE4; color:var(--ink-soft); }
-.badge.retro{ background:#FCEFD8; color:#8A5A0C; }
-
-.code-pill{
-  font-family:var(--font-mono); font-weight:600; background:var(--primary); color:#fff;
-  padding:2px 9px; border-radius:5px; letter-spacing:0.03em; font-size:12.5px;
-}
-
-.empty{
-  text-align:center; padding:40px 20px; color:var(--ink-soft);
-}
-.empty .big{ font-family:var(--font-display); font-size:17px; color:var(--ink); margin-bottom:4px; }
-
-.toast{
-  position:fixed; bottom:22px; left:50%; transform:translateX(-50%) translateY(20px);
-  background:var(--primary); color:#fff; padding:11px 20px; border-radius:8px; font-size:14px; font-weight:600;
-  opacity:0; pointer-events:none; transition:all .25s ease; z-index:200; box-shadow:0 8px 24px rgba(0,0,0,0.18);
-}
-.toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
-.toast.danger{ background:var(--danger); }
-
-.modal-bg{
-  position:fixed; inset:0; background:rgba(20,24,18,0.45); display:none; align-items:center; justify-content:center; z-index:150; padding:20px;
-}
-.modal-bg.show{ display:flex; }
-.modal{
-  background:#fff; border-radius:12px; padding:22px; width:100%; max-width:480px; max-height:85vh; overflow-y:auto;
-  box-shadow:0 20px 50px rgba(0,0,0,0.25);
-}
-.modal.large{ max-width:650px; }
-.modal h3{ font-family:var(--font-display); margin:0 0 14px; color:var(--primary); font-size:19px; }
-.modal-actions{ display:flex; gap:8px; justify-content:flex-end; margin-top:16px; }
-.checklist{ max-height:130px; overflow-y:auto; border:1px solid var(--line); border-radius:7px; padding:8px; }
-.checklist label{ display:flex; align-items:center; gap:8px; font-size:13px; text-transform:none; font-weight:400; color:var(--ink); margin-bottom:6px; }
-.checklist input[type=checkbox]{ width:auto; }
-
-/* ---------- PORTAL DO RESPONSÁVEL ---------- */
-.portal-header {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 20px;
-  margin-bottom: 20px;
-}
-.portal-header h2 { font-family: var(--font-display); color: var(--primary); margin: 0 0 4px; }
-.kids-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; margin-top: 18px; }
-
-/* ---------- PDV ---------- */
-.pdv-search{ position:relative; }
-.pdv-results{
-  position:absolute; top:100%; left:0; right:0; background:#fff; border:1px solid var(--line);
-  border-radius:8px; margin-top:4px; box-shadow:0 10px 24px rgba(0,0,0,0.1); z-index:20; max-height:220px; overflow-y:auto;
-}
-.pdv-results div{ padding:9px 12px; cursor:pointer; font-size:13.5px; display:flex; justify-content:space-between; }
-.pdv-results div:hover{ background:var(--bg); }
-
-.student-ticket{
-  background:var(--primary); color:#fff; border-radius:10px; padding:16px 18px; position:relative; overflow:hidden;
-  background-image: radial-gradient(circle at top right, rgba(227,167,62,0.25), transparent 55%);
-}
-.student-ticket .name{ font-family:var(--font-display); font-size:20px; font-weight:600; }
-.student-ticket .meta{ font-size:12.5px; opacity:0.8; margin-top:2px; }
-.student-ticket .balance{ font-family:var(--font-mono); font-size:26px; font-weight:600; margin-top:10px; }
-.student-ticket .balance.low{ color:#FFD9CE; }
-.student-ticket .code{ position:absolute; top:14px; right:16px; font-family:var(--font-mono); font-size:12px; background:rgba(255,255,255,0.15); padding:3px 9px; border-radius:6px; }
-
-.prod-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); gap:10px; margin-top:14px; }
-.prod-card{
-  border:1.5px solid var(--line); border-radius:9px; padding:10px; cursor:pointer; background:#fff; text-align:left; font-family:var(--font-body);
-  transition:border-color .12s, transform .08s;
-}
-.prod-card:hover{ border-color:var(--accent); }
-.prod-card:active{ transform:scale(0.97); }
-.prod-card.blocked{ opacity:0.4; cursor:not-allowed; }
-.prod-card.out{ opacity:0.4; cursor:not-allowed; }
-.prod-card .pname{ font-weight:600; font-size:13.5px; margin-bottom:4px; }
-.prod-card .pprice{ font-family:var(--font-mono); color:var(--primary); font-weight:600; font-size:13px; }
-.prod-card .pstock{ font-size:11px; color:var(--ink-soft); margin-top:3px; }
-
-.cart{ margin-top:10px; }
-.cart-item{ display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-bottom:1px dashed var(--line); font-size:13.5px; }
-.cart-item .qty-ctrl{ display:flex; align-items:center; gap:6px; }
-.cart-item .qty-ctrl button{ width:22px; height:22px; border-radius:5px; border:1px solid var(--line); background:#fff; cursor:pointer; font-weight:700; }
-.cart-total{ display:flex; justify-content:space-between; font-family:var(--font-mono); font-size:18px; font-weight:600; padding-top:12px; color:var(--primary); }
-
-/* ---------- EXTRATO ---------- */
-.extrato-recibo {
-  font-family: var(--font-body);
-  background: #FFFDF9;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 24px;
-}
-.extrato-recibo h4 {
-  font-family: var(--font-display);
-  font-size: 22px;
-  color: var(--primary);
-  margin: 0 0 10px;
-  text-align: center;
-}
-.extrato-recibo .dados-linha {
-  display: flex;
-  justify-content: space-between;
-  border-bottom: 1px dashed var(--line);
-  padding: 8px 0;
-  font-size: 13.5px;
-}
-.extrato-recibo .dados-linha strong { color: var(--primary); }
-
-/* ---------- KPI ---------- */
-.kpis{ display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; margin-bottom:20px; }
-.kpi{ background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:14px 16px; }
-.kpi .label{ font-size:11px; text-transform:uppercase; letter-spacing:0.03em; color:var(--ink-soft); font-weight:700; }
-.kpi .value{ font-family:var(--font-display); font-size:24px; color:var(--primary); margin-top:4px; }
-
-.filters{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px; align-items:flex-end; }
-.filters .field{ margin-bottom:0; min-width:150px; }
-
-.toolbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:10px; }
-
-@media print {
-  body * { visibility: hidden; }
-  #extratoModalBg, #extratoModalBg * { visibility: visible; }
-  #extratoModalBg { position: absolute; left: 0; top: 0; width: 100%; background: none; display: block !important; }
-  .modal-actions, .modal h3 { display: none !important; }
-  .modal { box-shadow: none; max-width: 100%; width: 100%; padding: 0; }
+/* print */
+#printArea{display:none}
+body.printing #app,body.printing .toast-root{display:none !important}
+body.printing #printArea{display:block !important}
+.print-doc{max-width:720px;margin:0 auto;padding:30px;font-family:var(--font-body)}
+.print-head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid var(--primary);padding-bottom:14px;margin-bottom:18px}
+.print-head h2{margin:0;font-family:var(--font-display);color:var(--primary-dark)}
+.print-table{width:100%;border-collapse:collapse;font-size:12.5px}
+.print-table th{background:var(--primary-soft);text-align:left;padding:7px 8px;border:1px solid var(--line)}
+.print-table td{padding:6px 8px;border:1px solid var(--line)}
+@media print{
+  @page{margin:16mm}
+  body *{visibility:hidden}
+  #printArea,#printArea *{visibility:visible}
+  #printArea{position:absolute;left:0;top:0;width:100%}
 }
 </style>
 </head>
 <body>
-
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<link rel="manifest" href="./manifest.json">
-<meta name="theme-color" content="#1F4735">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cantina em Dia</title>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap');
-:root{ --bg: #F3F1E8; --surface: #FFFFFF; --ink: #22291E; --ink-soft: #5B6355; --line: #DCD7C4; --primary: #1F4735; --primary-soft: #2C5C46; --accent: #E3A73E; --accent-ink: #4A3005; --danger: #B23A2E; --danger-soft: #F6E4E1; --good: #2C6E49; --good-soft: #E3EFE4; --radius: 10px; --font-display: 'Fraunces', Georgia, serif; --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; --font-mono: 'IBM Plex Mono', 'SFMono-Regular', Menlo, monospace; }
-*{box-sizing:border-box;} html,body{margin:0;padding:0; background:var(--bg); color:var(--ink); font-family:var(--font-body);}
-.app{ max-width:1180px; margin:0 auto; padding:0 20px 60px; }
-.login-container { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
-.login-card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 32px; width: 100%; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
-.login-tabs { display: flex; gap: 8px; margin-bottom: 24px; border-bottom: 2px solid var(--line); }
-.login-tab { flex: 1; background: none; border: none; padding: 10px; font-weight: 600; font-size: 14px; color: var(--ink-soft); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; }
-.login-tab.active { color: var(--primary); border-bottom-color: var(--accent); }
-/* [O restante do seu CSS original foi mantido abaixo] */
-header.top{ padding:28px 20px 0; max-width:1180px; margin:0 auto; }
-.brand{ display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; }
-.brand h1{ font-family:var(--font-display); font-weight:700; font-size:32px; margin:0; color:var(--primary); letter-spacing:-0.01em; }
-.brand .dot{ color:var(--accent); }
-.datebar{ display: flex; justify-content: space-between; align-items: center; margin-top:4px; font-size:13px; color:var(--ink-soft); }
-nav.tabs{ display:flex; gap:4px; margin-top:22px; border-bottom:2px solid var(--line); overflow-x:auto; }
-nav.tabs button{ font-family:var(--font-body); font-weight:600; font-size:14px; background:none; border:none; padding:10px 16px 12px; color:var(--ink-soft); cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-2px; }
-nav.tabs button.active{ color:var(--primary); border-bottom-color:var(--accent); }
-.card{ background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:18px; }
-.field{ margin-bottom:12px; }
-label{ display:block; font-size:12px; font-weight:600; color:var(--ink-soft); margin-bottom:4px; text-transform:uppercase; }
-input, select{ width:100%; padding:9px 10px; border:1.5px solid var(--line); border-radius:7px; }
-button.btn{ background:var(--primary); color:#fff; border:none; padding:10px 16px; border-radius:7px; cursor:pointer; font-weight:600; }
-button.btn.accent{ background:var(--accent); color:var(--accent-ink); }
-button.btn.ghost{ background:transparent; color:var(--primary); border:1px solid var(--primary); }
-.modal-bg{ position:fixed; inset:0; background:rgba(20,24,18,0.45); display:none; align-items:center; justify-content:center; z-index:150; }
-.modal-bg.show{ display:flex; }
-.modal{ background:#fff; border-radius:12px; padding:22px; width:100%; max-width:480px; }
-.toast{ position:fixed; bottom:22px; left:50%; transform:translateX(-50%); background:var(--primary); color:#fff; padding:11px 20px; border-radius:8px; opacity:0; pointer-events:none; transition:all .25s; }
-.toast.show{ opacity:1; }
-</style>
-</head>
-<body>
-
-<div id="loginScreen" class="login-container">
-  <div class="login-card">
-    <h2 style="text-align: center; color: var(--primary);">Cantina.em Dia</h2>
-    <div class="login-tabs">
-      <button class="login-tab active" id="tabOp" onclick="switchLoginTab('operador')">Operador</button>
-      <button class="login-tab" id="tabResp" onclick="switchLoginTab('responsavel')">Responsável</button>
-    </div>
-
-    <div id="formOperador">
-      <div class="field"><label>Senha Administrativa</label><input type="password" id="opPassword"></div>
-      <button class="btn" style="width: 100%;" onclick="tryLoginOperador()">Entrar</button>
-    </div>
-
-    <div id="formResponsavel" style="display: none;">
-      <div class="field"><label>CPF</label><input id="respCpfLogin" placeholder="000.000.000-00"></div>
-      <div class="field"><label>Senha</label><input type="password" id="respPassword"></div>
-      <button class="btn accent" style="width: 100%;" onclick="tryLoginResponsavel()">Acessar Portal</button>
-      <button class="btn ghost sm" style="width: 100%; margin-top:10px;" onclick="openModalEl('registerModalBg')">Criar conta / Primeiro acesso</button>
-    </div>
-  </div>
-</div>
-
-<div class="modal-bg" id="registerModalBg">
-  <div class="modal">
-    <h3>Criar Conta Responsável</h3>
-    <div class="field"><label>CPF</label><input id="regCpf"></div>
-    <div class="field"><label>Senha de Acesso</label><input type="password" id="regPass"></div>
-    <div class="modal-actions" style="display:flex; gap:10px;">
-        <button class="btn ghost" onclick="closeModal('registerModalBg')">Cancelar</button>
-        <button class="btn" onclick="registerResponsavel()">Confirmar</button>
-    </div>
-  </div>
-</div>
-
-<!-- [RESTAURAR AQUI A ESTRUTURA DO MAIN E OUTROS MODAIS DO SEU CÓDIGO ORIGINAL] -->
-<div id="toast" class="toast"></div>
+<div id="app"></div>
+<div id="printArea"></div>
+<div class="toast-root" id="toastRoot"></div>
 
 <script>
-let DATA = {
-  students: [], products: [], sales: [], responsaveis: [],
-  config: { modo: 'prepago', nome: 'Minha Cantina', adminPass: '1234' }
+/* ============================================================
+ Kantina Casa da Gilda  —  sistema de cantina escolar
+   Armazenamento: window.storage (dados compartilhados da cantina)
+   ============================================================ */
+
+/* ---------------- storage helpers ---------------- */
+async function dbGet(key, fallback){
+  try{
+    const r = await window.storage.get(key, true);
+    return r ? JSON.parse(r.value) : fallback;
+  }catch(e){ return fallback; }
+}
+async function dbSet(key, value){
+  try{
+    await window.storage.set(key, JSON.stringify(value), true);
+    return true;
+  }catch(e){ console.error('storage error', e); return false; }
+}
+
+let DB = {
+  config: { operatorPassword: '1234' },
+  categories: ['Lanches','Bebidas','Doces','Salgados','Outros'],
+  products: [],
+  students: [],
+  responsaveis: [],
+  transactions: []
 };
 
-// Carregamento persistente
-function loadData(){
-  const saved = localStorage.getItem('cantina-data');
-  if(saved) {
-    DATA = JSON.parse(saved);
+async function bootstrap(){
+  DB.config = await dbGet('db:config', { operatorPassword: '1234' });
+  DB.categories = await dbGet('db:categories', ['Lanches','Bebidas','Doces','Salgados','Outros']);
+  DB.products = await dbGet('db:products', []);
+  DB.students = await dbGet('db:students', []);
+  DB.responsaveis = await dbGet('db:responsaveis', []);
+  DB.transactions = await dbGet('db:transactions', []);
+}
+async function persist(part){
+  const map = { config:'db:config', categories:'db:categories', products:'db:products', students:'db:students', responsaveis:'db:responsaveis', transactions:'db:transactions' };
+  await dbSet(map[part], DB[part]);
+}
+
+/* ---------------- utils ---------------- */
+function uid(p){ return p + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function todayStr(){ const d=new Date(); return d.toISOString().slice(0,10); }
+function fmtMoney(v){ return (v<0?'-':'') + 'R$ ' + Math.abs(v||0).toFixed(2).replace('.',','); }
+function fmtDateBR(iso){ if(!iso) return ''; const [y,m,d]=iso.split('-'); return d+'/'+m+'/'+y; }
+function escapeHtml(s){ return (s||'').toString().replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function onlyDigits(s){ return (s||'').replace(/\D/g,''); }
+function fmtCPF(v){ v=onlyDigits(v).slice(0,11); return v.replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d{1,2})$/,'$1-$2'); }
+function validCPF(cpf){
+  cpf = onlyDigits(cpf);
+  if(cpf.length!==11 || /^(\d)\1{10}$/.test(cpf)) return false;
+  let sum=0;
+  for(let i=0;i<9;i++) sum += parseInt(cpf[i])*(10-i);
+  let r = (sum*10)%11; if(r===10) r=0;
+  if(r!==parseInt(cpf[9])) return false;
+  sum=0;
+  for(let i=0;i<10;i++) sum += parseInt(cpf[i])*(11-i);
+  r=(sum*10)%11; if(r===10) r=0;
+  return r===parseInt(cpf[10]);
+}
+function nextStudentCode(){
+  let max=0;
+  DB.students.forEach(s=>{ const m=/^AL(\d+)$/.exec(s.codigo||''); if(m) max=Math.max(max,parseInt(m[1])); });
+  return 'AL'+String(max+1).padStart(4,'0');
+}
+function findStudentByCode(code){
+  const term = (code || '').trim().toUpperCase();
+  // Busca pelo código exato ou verifica se o nome contém o texto digitado
+  return DB.students.find(s => 
+    s.codigo.toUpperCase() === term || 
+    s.nome.toUpperCase().includes(term)
+  );
+}
+function studentSpentOnDate(studentId, date){
+  return DB.transactions.filter(t=>t.studentId===studentId && t.tipo==='consumo' && t.data===date).reduce((s,t)=>s+t.valor,0);
+}
+function responsavelNome(cpf){
+  const r = DB.responsaveis.find(r=>r.cpf===cpf);
+  return r ? r.nome : '—';
+}
+function resizeImage(file, maxSize, quality){
+  return new Promise((resolve,reject)=>{
+    const reader = new FileReader();
+    reader.onload = e=>{
+      const img = new Image();
+      img.onload = ()=>{
+        let w=img.width, h=img.height;
+        if(w>h){ if(w>maxSize){ h=Math.round(h*maxSize/w); w=maxSize; } }
+        else { if(h>maxSize){ w=Math.round(w*maxSize/h); h=maxSize; } }
+        const canvas=document.createElement('canvas');
+        canvas.width=w; canvas.height=h;
+        canvas.getContext('2d').drawImage(img,0,0,w,h);
+        resolve(canvas.toDataURL('image/jpeg', quality||0.72));
+      };
+      img.onerror=reject;
+      img.src=e.target.result;
+    };
+    reader.onerror=reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+/* ---------------- toast ---------------- */
+function toast(msg, isErr){
+  const root=document.getElementById('toastRoot');
+  const el=document.createElement('div');
+  el.className='toast'+(isErr?' err':'');
+  el.textContent=msg;
+  root.appendChild(el);
+  setTimeout(()=>el.remove(), 3200);
+}
+
+/* ---------------- state ---------------- */
+let session = null; // {tipo:'operador'} | {tipo:'responsavel', cpf}
+let state = {
+  view:'login',
+  loginTab:'operador',
+  regStep:1,
+  regData:{ nome:'', cpf:'', email:'', senha:'', senha2:'', filhos:[{nome:''}] },
+  operatorView:'pdv',
+  responsavelView:'painel',
+  pdv:{ student:null, date: todayStr(), cart:[], catFilter:'Todas', codeInput:'' },
+  alunosSearch:'',
+  editingProduct:null,
+  editingStudent:null,
+  productModalOpen:false,
+  studentModalOpen:false,
+  newCategoryInput:'',
+  errorMsg:''
+};
+
+function setState(patch){ Object.assign(state, patch); render(); }
+
+/* ---------------- app render root ---------------- */
+function render(){
+  const app=document.getElementById('app');
+  if(!session){
+    app.innerHTML = state.view==='register' ? renderRegister() : renderLogin();
+  } else if(session.tipo==='operador'){
+    app.innerHTML = renderOperatorShell();
+  } else {
+    const resp = DB.responsaveis.find(r=>r.cpf===session.cpf);
+    if(resp && resp.primeiroAcesso){
+      app.innerHTML = renderForceChangePw();
+    } else {
+      app.innerHTML = renderResponsavelShell();
+    }
   }
-  // Garantir que as chaves existam após updates
-  if(!DATA.responsaveis) DATA.responsaveis = [];
-  if(!DATA.config.adminPass) DATA.config.adminPass = '1234';
+  wireEvents();
 }
 
-function saveData(){
-  localStorage.setItem('cantina-data', JSON.stringify(DATA));
-}
-
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.className = 'toast show';
-  setTimeout(() => t.className = 'toast', 2000);
-}
-
-function tryLoginOperador() {
-  if (document.getElementById('opPassword').value === DATA.config.adminPass) {
-    document.getElementById('loginScreen').style.display = 'none';
-    // Adicionar aqui a exibição da tela principal
-  } else { showToast('Senha incorreta!'); }
-}
-
-function registerResponsavel() {
-  const cpf = document.getElementById('regCpf').value;
-  const pass = document.getElementById('regPass').value;
-  if(DATA.responsaveis.find(r => r.cpf === cpf)) {
-    showToast('CPF já cadastrado!'); return;
-  }
-  DATA.responsaveis.push({ cpf, pass });
-  saveData();
-  showToast('Conta criada!');
-  closeModal('registerModalBg');
-}
-
-function tryLoginResponsavel() {
-  const cpf = document.getElementById('respCpfLogin').value;
-  const pass = document.getElementById('respPassword').value;
-  const user = DATA.responsaveis.find(r => r.cpf === cpf && r.pass === pass);
-  if (!user) {
-    showToast('Dados inválidos!'); return;
-  }
-  showToast('Acesso autorizado!');
-  // Prosseguir com o Portal...
-}
-
-function saveConfig() {
-  const p = document.getElementById('cfgAdminPass').value;
-  if(p) DATA.config.adminPass = p;
-  DATA.config.nome = document.getElementById('cfgNome').value;
-  saveData();
-  showToast('Configurações salvas!');
-}
-
-function switchLoginTab(type) {
-  document.getElementById('formOperador').style.display = type === 'operador' ? 'block' : 'none';
-  document.getElementById('formResponsavel').style.display = type === 'responsavel' ? 'block' : 'none';
-  document.getElementById('tabOp').className = 'login-tab ' + (type === 'operador' ? 'active' : '');
-  document.getElementById('tabResp').className = 'login-tab ' + (type === 'responsavel' ? 'active' : '');
-}
-
-function openModalEl(id) { document.getElementById(id).classList.add('show'); }
-function closeModal(id) { document.getElementById(id).classList.remove('show'); }
-
-loadData();
-</script>
-</body>
-</html>
-<!-- ===================== SISTEMA PRINCIPAL (OPERADOR) ===================== -->
-<div id="mainSystem" style="display: none;">
-  <header class="top">
-    <div class="brand">
-      <h1>Cantina<span class="dot">.</span></h1>
-      <span class="tagline">PDV &amp; controle de consumo escolar</span>
+/* ============================================================
+   LOGIN
+   ============================================================ */
+function renderLogin(){
+  return `
+  <div class="center-screen">
+    <div class="login-wrap">
+      <div class="login-hero">
+        <div>
+          <div class="login-logo">Kantina <span>Casa da Gilda</span></div>
+          <div class="login-tag">Controle de saldo, compras e lançamentos da cantina escolar — com lançamento retroativo e sem cartão físico.</div>
+        </div>
+        <div class="ticket-mini">
+          <div class="t-label">Código do aluno</div>
+          <div class="t-code">AL0027</div>
+          <div class="t-label" style="margin-top:10px">Nenhum cartão necessário — só o código</div>
+        </div>
+      </div>
+      <div class="login-form-side">
+        <div class="tabbar">
+          <button data-loginTab="operador" class="${state.loginTab==='operador'?'active':''}">Operador</button>
+          <button data-loginTab="responsavel" class="${state.loginTab==='responsavel'?'active':''}">Responsável</button>
+        </div>
+        ${state.loginTab==='operador' ? renderOperatorLoginForm() : renderResponsavelLoginForm()}
+        ${state.errorMsg ? `<div class="err mt12">${escapeHtml(state.errorMsg)}</div>` : ''}
+      </div>
     </div>
-    <div class="datebar">
-      <span id="todayLabel"></span>
-      <button class="btn ghost sm" style="padding:4px 10px;" onclick="logout()">Logout</button>
+  </div>`;
+}
+
+function renderOperatorLoginForm(){
+  return `
+  <form id="formOperadorLogin">
+    <h2 style="margin:0 0 4px;font-size:20px">Acesso do operador</h2>
+    <p class="muted small mb16">Entre com a senha da cantina para abrir o PDV.</p>
+    <div class="field">
+      <label>Senha do operador</label>
+      <input type="password" name="senha" placeholder="••••" autofocus>
     </div>
-    <nav class="tabs">
-      <button data-tab="pdv" class="active">PDV</button>
-      <button data-tab="alunos">Alunos</button>
-      <button data-tab="produtos">Produtos</button>
-      <button data-tab="lancamentos">Lançamentos</button>
-      <button data-tab="relatorios">Relatórios</button>
-      <button data-tab="config">Config</button>
-    </nav>
-  </header>
-
-  <div class="app">
-  <main>
-    <!-- ===================== PDV ===================== -->
-    <section class="tabpanel active" id="tab-pdv">
-      <div class="grid2">
-        <div class="card">
-          <div class="section-title">Venda</div>
-          <div class="pdv-search">
-            <div class="field">
-              <label>Buscar aluno (código ou nome)</label>
-              <input id="pdvSearch" placeholder="Ex: 4821 ou Ana" autocomplete="off">
-            </div>
-            <div class="pdv-results" id="pdvResults"></div>
-          </div>
-
-          <div id="pdvStudentBox"></div>
-
-          <div id="pdvProdArea" style="display:none; margin-top:18px;">
-            <div class="row" style="align-items:flex-end;">
-              <div class="field" style="flex:2;">
-                <label>Buscar produto</label>
-                <input id="pdvProdSearch" placeholder="Filtrar produtos..." autocomplete="off">
-              </div>
-              <div class="field" style="flex:1;">
-                <label>Data do consumo</label>
-                <input type="date" id="pdvDate">
-              </div>
-            </div>
-            <div class="prod-grid" id="pdvProdGrid"></div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="section-title">Comanda</div>
-          <div id="cartBox">
-            <div class="empty"><div class="big">Comanda vazia</div><div>Selecione um aluno e adicione produtos.</div></div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ===================== ALUNOS ===================== -->
-    <section class="tabpanel" id="tab-alunos">
-      <div class="toolbar">
-        <input id="alunoSearch" placeholder="Buscar aluno, turma, código ou responsável..." style="max-width:320px;">
-        <button class="btn accent" onclick="openStudentModal()">+ Novo aluno</button>
-      </div>
-      <div class="card" style="padding:0;">
-        <table>
-          <thead><tr><th>Código</th><th>Nome</th><th>Responsável / CPF</th><th>Turma</th><th>Saldo</th><th>Limite diário</th><th>Status</th><th>Ações</th></tr></thead>
-          <tbody id="studentsTbody"></tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- ===================== PRODUTOS ===================== -->
-    <section class="tabpanel" id="tab-produtos">
-      <div class="toolbar">
-        <input id="produtoSearch" placeholder="Buscar produto..." style="max-width:320px;">
-        <button class="btn accent" onclick="openProductModal()">+ Novo produto</button>
-      </div>
-      <div class="card" style="padding:0;">
-        <table>
-          <thead><tr><th>Produto</th><th>Categoria</th><th>Preço</th><th>Estoque</th><th>Status</th><th></th></tr></thead>
-          <tbody id="productsTbody"></tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- ===================== LANÇAMENTOS ===================== -->
-    <section class="tabpanel" id="tab-lancamentos">
-      <div class="filters">
-        <div class="field">
-          <label>Aluno</label>
-          <select id="filtroAluno"><option value="">Todos</option></select>
-        </div>
-        <div class="field">
-          <label>De</label>
-          <input type="date" id="filtroDe">
-        </div>
-        <div class="field">
-          <label>Até</label>
-          <input type="date" id="filtroAte">
-        </div>
-        <div class="field">
-          <label>Somente retroativos</label>
-          <select id="filtroRetro">
-            <option value="">Todos</option>
-            <option value="1">Só retroativos</option>
-          </select>
-        </div>
-        <button class="btn ghost sm" onclick="clearFilters()">Limpar filtros</button>
-      </div>
-      <div class="card" style="padding:0;">
-        <table>
-          <thead><tr><th>Aluno</th><th>Itens</th><th>Total</th><th>Data do consumo</th><th>Lançado em</th><th></th></tr></thead>
-          <tbody id="salesTbody"></tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- ===================== RELATÓRIOS ===================== -->
-    <section class="tabpanel" id="tab-relatorios">
-      <div class="kpis" id="kpiBox"></div>
-      <div class="grid2">
-        <div class="card">
-          <div class="section-title">Consumo por aluno</div>
-          <table><thead><tr><th>Aluno</th><th>Compras</th><th>Total</th></tr></thead><tbody id="repAlunoTbody"></tbody></table>
-        </div>
-        <div class="card">
-          <div class="section-title">Produtos mais vendidos</div>
-          <table><thead><tr><th>Produto</th><th>Qtd</th><th>Total</th></tr></thead><tbody id="repProdTbody"></tbody></table>
-        </div>
-      </div>
-      <div class="card" style="margin-top:18px;">
-        <div class="section-title">Estoque baixo</div>
-        <table><thead><tr><th>Produto</th><th>Estoque</th></tr></thead><tbody id="repEstoqueTbody"></tbody></table>
-      </div>
-    </section>
-
-    <!-- ===================== CONFIG ===================== -->
-    <section class="tabpanel" id="tab-config">
-      <div class="card" style="max-width:480px;">
-        <div class="section-title">Configurações da cantina</div>
-        <div class="field">
-          <label>Senha de Acesso do Administrador</label>
-          <input type="password" id="cfgAdminPass" placeholder="Nova senha administrativa">
-        </div>
-        <div class="field">
-          <label>Modelo de cobrança</label>
-          <select id="cfgModo">
-            <option value="prepago">Pré-pago (aluno precisa ter saldo)</option>
-            <option value="pospago">Pós-pago (permite saldo negativo)</option>
-          </select>
-        </div>
-        <div class="field">
-          <label>Nome da cantina</label>
-          <input id="cfgNome" placeholder="Ex: Cantina do Colégio Aurora">
-        </div>
-        <button class="btn" onclick="saveConfig()">Salvar configurações</button>
-      </div>
-    </section>
-  </main>
-  </div>
-</div>
-
-<div class="toast" id="toast"></div>
-
-<!-- Student modal -->
-<div class="modal-bg" id="studentModalBg">
-  <div class="modal">
-    <h3 id="studentModalTitle">Novo aluno</h3>
-    <input type="hidden" id="studentId">
-    <div class="field"><label>Nome do aluno</label><input id="studentName"></div>
-    <div class="row">
-      <div class="field"><label>Turma</label><input id="studentClass" placeholder="Ex: 7ºA"></div>
-      <div class="field"><label>Código</label><input id="studentCode" style="font-family:var(--font-mono)"></div>
-    </div>
-    <div class="row">
-      <div class="field"><label>Nome do Responsável</label><input id="studentRespName" placeholder="Pai, Mãe ou Tutor"></div>
-      <div class="field"><label>CPF do Responsável</label><input id="studentRespCpf" placeholder="000.000.000-00"></div>
-    </div>
-    <div class="row">
-      <div class="field"><label>Saldo inicial (R$)</label><input id="studentBalance" type="number" step="0.01"></div>
-      <div class="field"><label>Limite diário (R$, opcional)</label><input id="studentLimit" type="number" step="0.01" placeholder="Sem limite"></div>
+    <button class="btn btn-primary btn-block" type="submit">Entrar</button>
+    <p class="hint mt12">Senha padrão de fábrica: 1234 (altere em Configurações após entrar).</p>
+  </form>`;
+}
+function renderResponsavelLoginForm(){
+  return `
+  <form id="formResponsavelLogin">
+    <h2 style="margin:0 0 4px;font-size:20px">Acesso do responsável</h2>
+    <p class="muted small mb16">Acompanhe saldo, compras e recarregue seus filhos.</p>
+    <div class="field">
+      <label>CPF</label>
+      <input type="text" name="cpf" id="loginCpf" placeholder="000.000.000-00" maxlength="14">
     </div>
     <div class="field">
-      <label>Produtos bloqueados para este aluno</label>
-      <div class="checklist" id="studentBlockedList"></div>
+      <label>Senha</label>
+      <input type="password" name="senha" placeholder="••••">
     </div>
-    <div class="modal-actions">
-      <button class="btn ghost" onclick="closeModal('studentModalBg')">Cancelar</button>
-      <button class="btn" onclick="saveStudent()">Salvar</button>
-    </div>
-  </div>
-</div>
-
-<!-- Recharge modal -->
-<div class="modal-bg" id="rechargeModalBg">
-  <div class="modal">
-    <h3>Adicionar crédito</h3>
-    <input type="hidden" id="rechargeStudentId">
-    <p class="muted" id="rechargeStudentName" style="margin-top:-6px;"></p>
-    <div class="field"><label>Valor a adicionar (R$)</label><input id="rechargeAmount" type="number" step="0.01"></div>
-    <div class="modal-actions">
-      <button class="btn ghost" onclick="closeModal('rechargeModalBg')">Cancelar</button>
-      <button class="btn accent" onclick="confirmRecharge()">Adicionar crédito</button>
-    </div>
-  </div>
-</div>
-
-<!-- Product modal -->
-<div class="modal-bg" id="productModalBg">
-  <div class="modal">
-    <h3 id="productModalTitle">Novo produto</h3>
-    <input type="hidden" id="productId">
-    <div class="field"><label>Nome do produto</label><input id="productName"></div>
-    <div class="row">
-      <div class="field"><label>Categoria</label><input id="productCategory" placeholder="Ex: Lanches"></div>
-      <div class="field"><label>Preço (R$)</label><input id="productPrice" type="number" step="0.01"></div>
-    </div>
-    <div class="field"><label>Estoque</label><input id="productStock" type="number" step="1"></div>
-    <div class="modal-actions">
-      <button class="btn ghost" onclick="closeModal('productModalBg')">Cancelar</button>
-      <button class="btn" onclick="saveProduct()">Salvar</button>
-    </div>
-  </div>
-</div>
-
-<!-- Extrato modal -->
-<div class="modal-bg" id="extratoModalBg">
-  <div class="modal large">
-    <h3>Extrato do Aluno</h3>
-    <div id="extratoArea"></div>
-    <div class="modal-actions">
-      <button class="btn ghost" onclick="closeModal('extratoModalBg')">Fechar</button>
-      <button class="btn accent" onclick="window.print()">Imprimir / Salvar PDF</button>
-    </div>
-  </div>
-</div>
-
-<script>
-/* =========================================================
-   STATE
-========================================================= */
-let DATA = {
-  students: [],
-  products: [],
-  sales: [],
-  recharges: [],
-  config: { modo: 'prepago', nome: 'Minha Cantina', adminPass: '1234' }
-};
-let currentSale = { studentId: null, items: [] };
-const todayStr = () => new Date().toISOString().slice(0,10);
-
-/* =========================================================
-   STORAGE
-========================================================= */
-async function loadData(){
-  try{
-    const res = await window.storage.get('cantina-data', true);
-    if(res && res.value){
-      const parsed = JSON.parse(res.value);
-      DATA = Object.assign(DATA, parsed);
-      // Garante que exista senha administrativa inicial
-      if(!DATA.config.adminPass) DATA.config.adminPass = '1234';
-    }
-  }catch(e){ }
-  render_all();
-}
-let saveTimer = null;
-function saveData(){
-  clearTimeout(saveTimer);
-  saveTimer = setTimeout(async () => {
-    try{ await window.storage.set('cantina-data', JSON.stringify(DATA), true); }
-    catch(e){ showToast('Não foi possível salvar os dados agora.', true); }
-  }, 250);
+    <button class="btn btn-primary btn-block" type="submit">Entrar</button>
+    <p class="hint mt12">Ainda não tem conta? <button type="button" class="link-btn" id="goRegister">Cadastre-se e adicione seus filhos</button></p>
+  </form>`;
 }
 
-/* =========================================================
-   HELPERS
-========================================================= */
-function fmtMoney(v){ return 'R$ ' + (Number(v)||0).toFixed(2).replace('.', ','); }
-function fmtDate(d){
-  if(!d) return '—';
-  const [y,m,dd] = d.split('-');
-  return `${dd}/${m}/${y}`;
-}
-function uid(prefix){ return prefix + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
-function genStudentCode(){
-  let code;
-  do{ code = String(Math.floor(1000 + Math.random()*9000)); }
-  while(DATA.students.some(s => s.code === code));
-  return code;
-}
-function showToast(msg, danger){
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast show' + (danger ? ' danger' : '');
-  setTimeout(()=> t.className = 'toast', 2200);
-}
-function closeModal(id){ document.getElementById(id).classList.remove('show'); }
-function openModalEl(id){ document.getElementById(id).classList.add('show'); }
-function studentById(id){ return DATA.students.find(s => s.id === id); }
-function productById(id){ return DATA.products.find(p => p.id === id); }
-
-// Aplicadores de máscaras de digitação de CPF
-function applyCpfMask(e) {
-  let v = e.target.value.replace(/\D/g, "");
-  if (v.length > 11) v = v.slice(0, 11);
-  v = v.replace(/(\d{3})(\d)/, "$1.$2");
-  v = v.replace(/(\d{3})(\d)/, "$1.$2");
-  v = v.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
-  e.target.value = v;
-}
-document.getElementById('studentRespCpf').addEventListener('input', applyCpfMask);
-document.getElementById('respCpfLogin').addEventListener('input', applyCpfMask);
-
-/* =========================================================
-   SISTEMA DE LOGIN E TRANSIÇÃO DE TELAS
-========================================================= */
-function switchLoginTab(type) {
-  const tOp = document.getElementById('tabOp');
-  const tResp = document.getElementById('tabResp');
-  const fOp = document.getElementById('formOperador');
-  const fResp = document.getElementById('formResponsavel');
-
-  if (type === 'operador') {
-    tOp.classList.add('active'); tResp.classList.remove('active');
-    fOp.style.display = 'block'; fResp.style.display = 'none';
-  } else {
-    tOp.classList.remove('active'); tResp.classList.add('active');
-    fOp.style.display = 'none'; fResp.style.display = 'block';
-  }
-}
-
-function tryLoginOperador() {
-  const pass = document.getElementById('opPassword').value;
-  const realPass = DATA.config.adminPass || '1234';
-  if (pass === realPass) {
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('mainSystem').style.display = 'block';
-    document.getElementById('opPassword').value = '';
-    showToast('Acesso administrativo autorizado.');
-  } else {
-    showToast('Senha incorreta!', true);
-  }
-}
-
-function tryLoginResponsavel() {
-  const cpf = document.getElementById('respCpfLogin').value.trim();
-  const pass = document.getElementById('respPassword').value;
-
-  if(!cpf) { showToast('Por favor, informe seu CPF.', true); return; }
-
-  // Busca se existe esse CPF atrelado a algum aluno ativo
-  const filhos = DATA.students.filter(s => s.respCpf === cpf && s.active !== false);
-
-  if (!filhos.length) {
-    showToast('Nenhum aluno ativo vinculado a este CPF.', true);
-    return;
-  }
-
-  // A senha padrão inicial para os pais é "123456"
-  if (pass === '123456') {
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('portalScreen').style.display = 'block';
-    
-    // Configura e abre o portal dos pais
-    document.getElementById('portalWelcome').textContent = `Responsável: ${filhos[0].respName} (CPF: ${cpf})`;
-    renderPortalResponsavel(filhos);
-    document.getElementById('respCpfLogin').value = '';
-    document.getElementById('respPassword').value = '';
-    showToast('Acesso autorizado.');
-  } else {
-    showToast('Senha de acesso incorreta! (Tente 123456)', true);
-  }
-}
-
-function logout() {
-  document.getElementById('mainSystem').style.display = 'none';
-  document.getElementById('portalScreen').style.display = 'none';
-  document.getElementById('loginScreen').style.display = 'flex';
-  showToast('Sessão encerrada.');
-}
-
-/* =========================================================
-   PORTAL EXCLUSIVO DO RESPONSÁVEL
-========================================================= */
-function renderPortalResponsavel(filhos) {
-  const area = document.getElementById('kidsListArea');
-  if(!filhos.length) {
-    area.innerHTML = '<div class="empty">Nenhum aluno vinculado ao seu perfil.</div>';
-    return;
-  }
-
-  area.innerHTML = filhos.map(f => {
-    const low = f.balance < 5;
-    return `
-      <div class="card" style="border: 1px solid var(--line); display:flex; flex-direction:column; justify-content:space-between; gap:16px;">
-        <div>
-          <div style="font-size:12px; font-family:var(--font-mono); color:var(--ink-soft); margin-bottom:4px;">CÓDIGO: #${f.code}</div>
-          <h3 style="font-family:var(--font-display); font-size:18px; margin:0 0 6px; color:var(--primary);">${f.name}</h3>
-          <div class="muted" style="font-size:12px;">Turma: ${f.className || 'Não informada'}</div>
-          <div class="muted" style="font-size:12px; margin-top:2px;">Limite diário: ${f.limit ? fmtMoney(f.limit) : 'Sem limite de gastos'}</div>
+/* ---------------- registro do responsável ---------------- */
+function renderRegister(){
+  const d = state.regData;
+  return `
+  <div class="center-screen">
+    <div class="card" style="max-width:560px;width:100%">
+      <div class="pad">
+        <div class="row between mb16">
+          <h2 style="margin:0">Cadastro do responsável</h2>
+          <button class="link-btn" id="backToLogin">Voltar ao login</button>
         </div>
-        
-        <div>
-          <div style="font-size:11px; text-transform:uppercase; font-weight:600; color:var(--ink-soft);">Saldo Disponível</div>
-          <div style="font-family:var(--font-mono); font-size:24px; font-weight:600; margin-bottom:12px; ${low?'color:var(--danger);':''}">
-            ${fmtMoney(f.balance)}
+        <form id="formRegister">
+          <div class="field">
+            <label>Nome completo</label>
+            <input type="text" name="nome" value="${escapeHtml(d.nome)}" placeholder="Seu nome">
           </div>
-          <button class="btn sm" style="width:100%;" onclick="gerarExtrato('${f.id}')">Visualizar Extrato de Consumo</button>
-        </div>
+          <div class="row gap12">
+            <div class="field grow">
+              <label>CPF</label>
+              <input type="text" name="cpf" id="regCpf" value="${escapeHtml(d.cpf)}" placeholder="000.000.000-00" maxlength="14">
+            </div>
+            <div class="field grow">
+              <label>E-mail (opcional)</label>
+              <input type="email" name="email" value="${escapeHtml(d.email)}" placeholder="voce@email.com">
+            </div>
+          </div>
+          <div class="row gap12">
+            <div class="field grow">
+              <label>Criar senha</label>
+              <input type="password" name="senha" placeholder="Mínimo 4 caracteres">
+            </div>
+            <div class="field grow">
+              <label>Confirmar senha</label>
+              <input type="password" name="senha2" placeholder="Repita a senha">
+            </div>
+          </div>
+
+          <label class="mt16" style="display:block">Filhos vinculados a esta conta</label>
+          <div id="filhosWrap">
+            ${d.filhos.map((f,i)=>`
+              <div class="child-row-form row gap8">
+                <input type="text" class="grow filhoNome" data-idx="${i}" value="${escapeHtml(f.nome)}" placeholder="Nome do aluno ${i+1}">
+                ${d.filhos.length>1?`<button type="button" class="btn btn-ghost btn-icon removeFilho" data-idx="${i}">✕</button>`:''}
+              </div>`).join('')}
+          </div>
+          <button type="button" class="link-btn" id="addFilho">+ adicionar outro filho</button>
+
+          ${state.errorMsg?`<div class="err mt12">${escapeHtml(state.errorMsg)}</div>`:''}
+          <button class="btn btn-primary btn-block mt20" type="submit">Criar conta</button>
+        </form>
       </div>
-    `;
-  }).join('');
+    </div>
+  </div>`;
 }
 
-/* =========================================================
-   TABS PRINCIPAIS
-========================================================= */
-document.querySelectorAll('nav.tabs button').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.remove('active'));
-    document.querySelectorAll('.tabpanel').forEach(p=>p.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
-    if(btn.dataset.tab === 'relatorios') renderReports();
-    if(btn.dataset.tab === 'lancamentos') renderSales();
-    if(btn.dataset.tab === 'config') renderConfig();
-    if(btn.dataset.tab === 'alunos') renderStudents();
-  });
-});
-
-function render_all(){
-  document.getElementById('todayLabel').textContent = 'Hoje: ' + fmtDate(todayStr());
-  document.getElementById('pdvDate').value = todayStr();
-  renderStudents();
-  renderProducts();
-  renderSales();
-  renderReports();
-  renderConfig();
-  renderPdvStudentFilterOptions();
+/* ---------------- trocar senha obrigatória (primeiro acesso responsável) ---------------- */
+function renderForceChangePw(){
+  return `
+  <div class="center-screen">
+    <div class="card" style="max-width:420px;width:100%">
+      <div class="pad">
+        <h2 style="margin:0 0 4px">Defina sua nova senha</h2>
+        <p class="muted small mb16">Este é seu primeiro acesso. Por segurança, crie uma senha só sua antes de continuar.</p>
+        <form id="formForcePw">
+          <div class="field"><label>Nova senha</label><input type="password" name="s1" placeholder="Mínimo 4 caracteres"></div>
+          <div class="field"><label>Confirmar nova senha</label><input type="password" name="s2" placeholder="Repita a senha"></div>
+          ${state.errorMsg?`<div class="err mb12">${escapeHtml(state.errorMsg)}</div>`:''}
+          <button class="btn btn-primary btn-block" type="submit">Salvar e entrar</button>
+        </form>
+        <button class="link-btn mt16" id="logoutForce">Sair</button>
+      </div>
+    </div>
+  </div>`;
 }
 
-/* =========================================================
-   PDV (VÁRIOS PRODUTOS E LANÇAMENTOS RETROATIVOS)
-========================================================= */
-const pdvSearch = document.getElementById('pdvSearch');
-pdvSearch.addEventListener('input', ()=>{
-  const q = pdvSearch.value.trim().toLowerCase();
-  const box = document.getElementById('pdvResults');
-  if(!q){ box.innerHTML=''; box.style.display='none'; return; }
-  const matches = DATA.students.filter(s =>
-    s.active !== false && (s.code.includes(q) || s.name.toLowerCase().includes(q))
-  ).slice(0,8);
-  if(!matches.length){ box.innerHTML = '<div class="muted" style="padding:10px 12px;">Nenhum aluno encontrado</div>'; box.style.display='block'; return; }
-  box.innerHTML = matches.map(s => `<div onclick="selectPdvStudent('${s.id}')"><span>${s.name} — ${s.className||''}</span><span class="code-pill">${s.code}</span></div>`).join('');
-  box.style.display='block';
-});
-
-function selectPdvStudent(id){
-  currentSale.studentId = id;
-  currentSale.items = [];
-  document.getElementById('pdvResults').style.display='none';
-  pdvSearch.value = '';
-  renderPdvStudentBox();
-  renderPdvProducts();
-  renderCart();
-  document.getElementById('pdvProdArea').style.display = 'block';
+/* ============================================================
+   OPERADOR — shell + views
+   ============================================================ */
+function renderOperatorShell(){
+  const tabs = [
+    ['pdv','PDV / Vendas'],
+    ['recarga','Recarga'],
+    ['alunos','Alunos'],
+    ['produtos','Produtos'],
+    ['categorias','Categorias'],
+    ['relatorios','Relatórios'],
+    ['config','Configurações'],
+  ];
+  return `
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">Kantina <span>Casa da Gilda</span></div>
+      <div class="nav">${tabs.map(([k,l])=>`<button data-opview="${k}" class="${state.operatorView===k?'active':''}">${l}</button>`).join('')}</div>
+      <div class="userchip">
+        <div class="avatar">OP</div>
+        <div><div style="font-weight:700">Operador</div></div>
+        <button class="btn btn-ghost btn-sm" id="btnLogout">Sair</button>
+      </div>
+    </div>
+    <div class="nav" style="display:none" id="mobileNavPlaceholder"></div>
+  </div>
+  <select id="mobileNavSelect" style="display:none;margin:10px 16px;width:calc(100% - 32px)">
+    ${tabs.map(([k,l])=>`<option value="${k}" ${state.operatorView===k?'selected':''}>${l}</option>`).join('')}
+  </select>
+  <div class="page">
+    ${ state.operatorView==='pdv' ? renderPDV() :
+       state.operatorView==='recarga' ? renderRecarga() :
+       state.operatorView==='alunos' ? renderAlunos() :
+       state.operatorView==='produtos' ? renderProdutos() :
+       state.operatorView==='categorias' ? renderCategorias() :
+       state.operatorView==='relatorios' ? renderRelatorios() :
+       renderConfig() }
+  </div>
+  ${state.productModalOpen ? renderProductModal() : ''}
+  ${state.studentModalOpen ? renderStudentModal() : ''}
+  `;
 }
 
-function renderPdvStudentBox(){
-  const box = document.getElementById('pdvStudentBox');
-  const s = studentById(currentSale.studentId);
-  if(!s){ box.innerHTML=''; return; }
-  const low = s.balance < 5;
-  box.innerHTML = `
-    <div class="student-ticket" style="margin-top:14px;">
-      <div class="code">#${s.code}</div>
-      <div class="name">${s.name}</div>
-      <div class="meta">${s.className || 'Sem turma'} ${s.limit ? '· limite diário ' + fmtMoney(s.limit) : ''}</div>
-      <div class="balance ${low?'low':''}">${fmtMoney(s.balance)}</div>
-    </div>`;
-}
+/* ---------------- PDV ---------------- */
+function renderPDV(){
+  const p = state.pdv;
+  const s = p.student;
+  const cats = ['Todas', ...DB.categories];
+  const filtered = DB.products.filter(pr=>pr.ativo!==false && (p.catFilter==='Todas' || pr.categoria===p.catFilter));
+  const total = p.cart.reduce((a,c)=>a+c.preco*c.qtd,0);
+  const gastoHoje = s ? studentSpentOnDate(s.id, p.date) : 0;
 
-document.getElementById('pdvProdSearch').addEventListener('input', renderPdvProducts);
+  return `
+  <div class="page-head">
+    <div>
+      <h1>Ponto de Venda</h1>
+      <p>Lance o consumo do aluno. Você pode escolher a data — inclusive datas passadas.</p>
+    </div>
+  </div>
 
-function renderPdvProducts(){
-  const grid = document.getElementById('pdvProdGrid');
-  const s = studentById(currentSale.studentId);
-  const q = document.getElementById('pdvProdSearch').value.trim().toLowerCase();
-  const list = DATA.products.filter(p => p.active !== false && p.name.toLowerCase().includes(q));
-  if(!list.length){ grid.innerHTML = '<div class="muted">Nenhum produto cadastrado.</div>'; return; }
-  grid.innerHTML = list.map(p=>{
-    const blocked = s && (s.blockedIds||[]).includes(p.id);
-    const out = p.stock <= 0;
-    const cls = blocked ? 'blocked' : (out ? 'out' : '');
-    return `<button type="button" class="prod-card ${cls}" ${(blocked||out)?'disabled':''} onclick="addToCart('${p.id}')">
-      <div class="pname">${p.name}</div>
-      <div class="pprice">${fmtMoney(p.price)}</div>
-      <div class="pstock">${blocked ? 'bloqueado' : (out ? 'sem estoque' : 'estoque: ' + p.stock)}</div>
-    </button>`;
-  }).join('');
-}
+  <div class="card pad mb20">
+    <div class="row gap12 wrap" style="align-items:flex-end">
+      <div class="field" style="margin:0;min-width:220px">
+  <label>Buscar Aluno (Nome ou Código)</label>
+  <input type="text" id="pdvCode" placeholder="Ex: AL0001 ou Nome do aluno" value="${escapeHtml(p.codeInput)}" class="mono">
+</div>
+<button class="btn btn-primary" id="pdvBuscar">Buscar aluno</button>
+      <div class="field" style="margin:0">
+        <label>Data do lançamento</label>
+        <input type="date" id="pdvDate" value="${p.date}" max="${todayStr()}">
+      </div>
+      ${p.date!==todayStr() ? `<span class="badge badge-amber">Lançamento retroativo</span>` : ''}
+    </div>
 
-function addToCart(productId){
-  const p = productById(productId);
-  if(!p) return;
-  const inCartQty = currentSale.items.filter(i=>i.productId===productId).reduce((a,i)=>a+i.qty,0);
-  if(inCartQty >= p.stock){ showToast('Estoque insuficiente para ' + p.name, true); return; }
-  const existing = currentSale.items.find(i=>i.productId===productId);
-  if(existing) existing.qty += 1;
-  else currentSale.items.push({ productId, name:p.name, price:p.price, qty:1 });
-  renderCart();
-}
+    ${s ? `
+      <div class="ticket pad row between wrap gap16 mt16" style="background:var(--primary-soft)">
+        <div>
+          <div class="small faint">ALUNO</div>
+          <div style="font-weight:800;font-size:17px">${escapeHtml(s.nome)}</div>
+          <div class="mono small muted">Código ${s.codigo} · Responsável: ${escapeHtml(responsavelNome(s.cpfResponsavel))}</div>
+        </div>
+        <div>
+          <div class="small faint">SALDO ATUAL</div>
+          <div class="mono" style="font-size:20px;font-weight:800;color:${s.saldo<0?'var(--coral)':'var(--primary)'}">${fmtMoney(s.saldo)}</div>
+        </div>
+        <div>
+          <div class="small faint">GASTO EM ${fmtDateBR(p.date)}</div>
+          <div class="mono" style="font-size:16px;font-weight:700">${fmtMoney(gastoHoje)} ${s.limiteDiario>0?`/ ${fmtMoney(s.limiteDiario)}`:''}</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" id="pdvTrocarAluno">Trocar aluno</button>
+      </div>
+    ` : `<div class="hint mt12">Digite o código do aluno e clique em "Buscar aluno" para começar a venda.</div>`}
+  </div>
 
-function changeQty(productId, delta){
-  const item = currentSale.items.find(i=>i.productId===productId);
-  if(!item) return;
-  const p = productById(productId);
-  const newQty = item.qty + delta;
-  if(newQty <= 0){ currentSale.items = currentSale.items.filter(i=>i.productId!==productId); }
-  else if(p && newQty > p.stock){ showToast('Estoque insuficiente', true); return; }
-  else item.qty = newQty;
-  renderCart();
-}
+  ${s ? `
+  <div class="row gap20 wrap" style="align-items:flex-start">
+    <div class="grow card pad" style="min-width:320px">
+      <div class="chips mb16">
+        ${cats.map(c=>`<button class="chip ${p.catFilter===c?'active':''}" data-catfilter="${escapeHtml(c)}">${escapeHtml(c)}</button>`).join('')}
+      </div>
+      ${filtered.length? `
+      <div class="grid-cards">
+        ${filtered.map(pr=>{
+          const blocked = s.produtosBloqueados && s.produtosBloqueados.includes(pr.id);
+          return `
+          <button class="prod-card ${blocked?'blocked':''}" data-addcart="${pr.id}" ${blocked?'disabled title="Produto bloqueado pelo responsável"':''}>
+            <div class="prod-thumb" style="${pr.foto?`background-image:url('${pr.foto}')`:''}">${pr.foto?'':'🍽️'}</div>
+            <div class="prod-body">
+              <div class="prod-name">${escapeHtml(pr.nome)}</div>
+              <div class="prod-price">${fmtMoney(pr.preco)}</div>
+              ${blocked?`<div class="small" style="color:var(--coral);font-weight:700;margin-top:2px">Bloqueado</div>`:''}
+            </div>
+          </button>`;
+        }).join('')}
+      </div>` : `<div class="empty-state"><div class="ic">📦</div>Nenhum produto nesta categoria.</div>`}
+    </div>
 
-function renderCart(){
-  const box = document.getElementById('cartBox');
-  const s = studentById(currentSale.studentId);
-  if(!s || currentSale.items.length===0){
-    box.innerHTML = `<div class="empty"><div class="big">Comanda vazia</div><div>${s? 'Adicione produtos para '+s.name : 'Selecione um aluno e adicione produtos.'}</div></div>`;
-    return;
-  }
-  const total = currentSale.items.reduce((a,i)=>a+i.price*i.qty,0);
-  const dateVal = document.getElementById('pdvDate').value || todayStr();
-  const isRetro = dateVal !== todayStr();
-  const willBeNegative = (s.balance - total) < 0;
-  const blockedByBalance = willBeNegative && DATA.config.modo === 'prepago';
-  let limitWarning = '';
-  if(s.limit){
-    const spentToday = DATA.sales.filter(sa => sa.studentId===s.id && sa.date===dateVal).reduce((a,sa)=>a+sa.total,0);
-    if(spentToday + total > s.limit){
-      limitWarning = `<div class="badge bad" style="margin-top:8px;">Ultrapassa o limite diário de ${fmtMoney(s.limit)}</div>`;
-    }
-  }
-  box.innerHTML = `
-    <div class="cart">
-      ${currentSale.items.map(i=>`
-        <div class="cart-item">
-          <div>${i.name}<div class="muted">${fmtMoney(i.price)} un.</div></div>
-          <div class="qty-ctrl">
-            <button onclick="changeQty('${i.productId}',-1)">−</button>
-            <span>${i.qty}</span>
-            <button onclick="changeQty('${i.productId}',1)">+</button>
+    <div class="card pad" style="width:320px;flex-shrink:0">
+      <h3 style="margin:0 0 12px;font-size:16px">Carrinho</h3>
+      ${p.cart.length? p.cart.map(c=>`
+        <div class="cart-line">
+          <div class="grow">
+            <div style="font-weight:700;font-size:13.5px">${escapeHtml(c.nome)}</div>
+            <div class="mono small muted">${fmtMoney(c.preco)} un.</div>
           </div>
-        </div>`).join('')}
-      <div class="cart-total"><span>Total</span><span>${fmtMoney(total)}</span></div>
-      ${isRetro ? `<div class="badge retro" style="margin-top:10px;">Consumo retroativo para: ${fmtDate(dateVal)}</div>` : ''}
-      ${limitWarning}
-      ${blockedByBalance ? `<div class="badge bad" style="margin-top:8px;">Saldo insuficiente (modo pré-pago)</div>` : ''}
-      <button class="btn accent" style="width:100%; margin-top:14px;" ${blockedByBalance?'disabled':''} onclick="finalizeSale()">Finalizar venda</button>
-    </div>`;
+          <button class="qtybtn" data-cartqty="${c.produtoId}" data-delta="-1">−</button>
+          <div class="mono" style="width:20px;text-align:center;font-weight:700">${c.qtd}</div>
+          <button class="qtybtn" data-cartqty="${c.produtoId}" data-delta="1">+</button>
+          <button class="btn btn-ghost btn-icon btn-sm" data-cartremove="${c.produtoId}">✕</button>
+        </div>
+      `).join('') : `<div class="empty-state small"><div class="ic">🛒</div>Carrinho vazio</div>`}
+      <div class="row between mt16" style="border-top:2px solid var(--line);padding-top:12px">
+        <div style="font-weight:700">Total</div>
+        <div class="mono" style="font-weight:800;font-size:19px">${fmtMoney(total)}</div>
+      </div>
+      <button class="btn btn-accent btn-block mt16" id="pdvFinalizar" ${!p.cart.length?'disabled':''}>Finalizar venda</button>
+    </div>
+  </div>
+  ` : ''}
+  `;
 }
 
-function finalizeSale(){
-  const s = studentById(currentSale.studentId);
-  if(!s || !currentSale.items.length) return;
-  const total = currentSale.items.reduce((a,i)=>a+i.price*i.qty,0);
-  const dateVal = document.getElementById('pdvDate').value || todayStr();
-  if(DATA.config.modo === 'prepago' && (s.balance - total) < 0){
-    showToast('Saldo insuficiente para concluir a venda.', true); return;
-  }
-  currentSale.items.forEach(i=>{
-    const p = productById(i.productId);
-    if(p) p.stock = Math.max(0, p.stock - i.qty);
-  });
-  s.balance = +(s.balance - total).toFixed(2);
-  DATA.sales.push({
-    id: uid('venda'),
-    studentId: s.id,
-    items: currentSale.items.map(i=>({...i})),
-    total: +total.toFixed(2),
-    date: dateVal,
-    createdAt: new Date().toISOString()
-  });
-  saveData();
-  showToast('Venda registrada com sucesso!');
-  currentSale.items = [];
-  renderCart();
-  renderPdvProducts();
-  renderPdvStudentBox();
-  renderProducts();
-  renderSales();
+/* ---------------- Recarga ---------------- */
+function renderRecarga(){
+  return `
+  <div class="page-head">
+    <div><h1>Recarga de saldo</h1><p>Adicione crédito à conta de um aluno. A data também pode ser ajustada.</p></div>
+  </div>
+  <div class="card pad" style="max-width:480px">
+    <form id="formRecarga">
+      <div class="field"><label>Código do aluno</label><input type="text" name="codigo" class="mono" placeholder="Ex: AL0001"></div>
+      <div class="field"><label>Valor da recarga (R$)</label><input type="number" step="0.01" min="0.01" name="valor" placeholder="0,00"></div>
+      <div class="field"><label>Data</label><input type="date" name="data" value="${todayStr()}" max="${todayStr()}"></div>
+      <button class="btn btn-primary btn-block" type="submit">Confirmar recarga</button>
+    </form>
+  </div>
+  `;
 }
 
-/* =========================================================
-   ALUNOS (RESPONSÁVEIS E CADASTRO)
-========================================================= */
-document.getElementById('alunoSearch').addEventListener('input', renderStudents);
-
-function renderStudents(){
-  const q = document.getElementById('alunoSearch').value.trim().toLowerCase();
-  const tbody = document.getElementById('studentsTbody');
-  const list = DATA.students.filter(s => 
-    !q || 
-    s.name.toLowerCase().includes(q) || 
-    (s.className||'').toLowerCase().includes(q) || 
-    s.code.includes(q) ||
-    (s.respName||'').toLowerCase().includes(q)
-  );
-
-  if(!list.length){
-    tbody.innerHTML = `<tr><td colspan="8"><div class="empty"><div class="big">Nenhum aluno cadastrado</div><div>Clique em "Novo aluno" para começar.</div></div></td></tr>`;
-  } else {
-    tbody.innerHTML = list.map(s=>`
-      <tr>
-        <td><span class="code-pill">${s.code}</span></td>
-        <td><strong>${s.name}</strong></td>
-        <td>
-          <div style="font-size:12px;">${s.respName || '<span class="muted">Não informado</span>'}</div>
-          <div class="muted" style="font-size:11px;">${s.respCpf || ''}</div>
-        </td>
-        <td>${s.className||'—'}</td>
-        <td style="font-family:var(--font-mono); ${s.balance<0?'color:var(--danger); font-weight:600;':''}">${fmtMoney(s.balance)}</td>
-        <td>${s.limit ? fmtMoney(s.limit) : '—'}</td>
-        <td>${s.active===false ? '<span class="badge bad">Bloqueado</span>' : '<span class="badge good">Ativo</span>'}</td>
-        <td style="white-space:nowrap;">
-          <button class="btn sm ghost" onclick="openRechargeModal('${s.id}')" title="Adicionar saldo">+ R$</button>
-          <button class="icon" onclick="gerarExtrato('${s.id}')" title="Gerar Extrato p/ Responsável">📄</button>
-          <button class="icon" onclick="openStudentModal('${s.id}')" title="Editar dados">✎</button>
-          <button class="icon" onclick="toggleStudentActive('${s.id}')" title="Inativar/Ativar">⏻</button>
-        </td>
-      </tr>`).join('');
-  }
-}
-
-function openStudentModal(id){
-  document.getElementById('studentModalTitle').textContent = id ? 'Editar aluno' : 'Novo aluno';
-  const s = id ? studentById(id) : null;
-  document.getElementById('studentId').value = id || '';
-  document.getElementById('studentName').value = s ? s.name : '';
-  document.getElementById('studentClass').value = s ? (s.className||'') : '';
-  document.getElementById('studentCode').value = s ? s.code : genStudentCode();
-  document.getElementById('studentRespName').value = s ? (s.respName||'') : '';
-  document.getElementById('studentRespCpf').value = s ? (s.respCpf||'') : '';
-  document.getElementById('studentBalance').value = s ? s.balance : '';
-  document.getElementById('studentLimit').value = s ? (s.limit||'') : '';
-
-  const listDiv = document.getElementById('studentBlockedList');
-  const blockedIds = (s && s.blockedIds) ? s.blockedIds : [];
-  listDiv.innerHTML = DATA.products.map(p => `
-    <label>
-      <input type="checkbox" value="${p.id}" ${blockedIds.includes(p.id) ? 'checked' : ''}>
-      ${p.name}
-    </label>
-  `).join('');
-  openModalEl('studentModalBg');
-}
-
-function saveStudent(){
-  const id = document.getElementById('studentId').value;
-  const name = document.getElementById('studentName').value.trim();
-  const className = document.getElementById('studentClass').value.trim();
-  const code = document.getElementById('studentCode').value.trim();
-  const respName = document.getElementById('studentRespName').value.trim();
-  const respCpf = document.getElementById('studentRespCpf').value.trim();
-  const balance = parseFloat(document.getElementById('studentBalance').value) || 0;
-  const limit = parseFloat(document.getElementById('studentLimit').value) || null;
-
-  if(!name || !code){
-    showToast('Nome e código são obrigatórios.', true);
-    return;
-  }
-
-  const blockedIds = Array.from(document.querySelectorAll('#studentBlockedList input:checked')).map(el => el.value);
-
-  if(id){
-    const s = studentById(id);
-    if(s){
-      s.name = name; s.className = className; s.code = code; s.respName = respName; s.respCpf = respCpf;
-      s.balance = balance; s.limit = limit; s.blockedIds = blockedIds;
-    }
-  } else {
-    DATA.students.push({
-      id: uid('aluno'), name, className, code, respName, respCpf, balance, limit, blockedIds, active: true
-    });
-  }
-  saveData();
-  closeModal('studentModalBg');
-  renderStudents();
-  showToast('Cadastro de aluno atualizado.');
-}
-
-function toggleStudentActive(id){
-  const s = studentById(id); if(!s) return;
-  s.active = s.active === false ? true : false;
-  saveData(); renderStudents();
-}
-
-/* =========================================================
-   EXTRATO DO ALUNO (DETALHADO E PARA IMPRESSÃO)
-========================================================= */
-function gerarExtrato(studentId){
-  const s = studentById(studentId);
-  if(!s) return;
-
-  const vendas = DATA.sales.filter(v => v.studentId === studentId);
-  const recargas = (DATA.recharges || []).filter(r => r.studentId === studentId);
-
-  const historico = [];
-  vendas.forEach(v => {
-    historico.push({
-      data: v.date,
-      tipo: 'Consumo',
-      descricao: v.items.map(i => `${i.qty}x ${i.name}`).join(', '),
-      valor: -v.total,
-      realizadoEm: v.createdAt
-    });
-  });
-
-  recargas.forEach(r => {
-    historico.push({
-      data: r.date,
-      tipo: 'Crédito Adicionado',
-      descricao: 'Recarga de saldo na cantina',
-      valor: r.amount,
-      realizadoEm: r.date + "T00:00:00"
-    });
-  });
-
-  historico.sort((a,b) => new Date(b.realizadoEm) - new Date(a.realizadoEm));
-
-  let historicoHtml = '';
-  if (historico.length === 0) {
-    historicoHtml = `<tr><td colspan="4" class="empty">Sem movimentações neste período.</td></tr>`;
-  } else {
-    historicoHtml = historico.map(h => {
-      const corValor = h.valor < 0 ? 'color: var(--danger);' : 'color: var(--good);';
-      const sinal = h.valor < 0 ? '' : '+';
-      return `
+/* ---------------- Alunos ---------------- */
+function renderAlunos(){
+  const q = state.alunosSearch.toLowerCase();
+  const list = DB.students.filter(s=> s.nome.toLowerCase().includes(q) || s.codigo.toLowerCase().includes(q));
+  return `
+  <div class="page-head">
+    <div><h1>Alunos</h1><p>Cadastre alunos e gerencie limites, bloqueios e saldo.</p></div>
+    <button class="btn btn-primary" id="btnNovoAluno">+ Novo aluno</button>
+  </div>
+  <div class="field" style="max-width:320px"><input type="search" id="alunoSearch" placeholder="Buscar por nome ou código..." value="${escapeHtml(state.alunosSearch)}"></div>
+  <div class="card mt16">
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>Código</th><th>Nome</th><th>Responsável</th><th>Saldo</th><th>Limite/dia</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+      ${list.length? list.map(s=>`
         <tr>
-          <td>${fmtDate(h.data)}</td>
-          <td><strong>${h.tipo}</strong></td>
-          <td class="muted" style="font-size:12px;">${h.descricao}</td>
-          <td style="font-family:var(--font-mono); font-weight:600; ${corValor}">${sinal}${fmtMoney(Math.abs(h.valor))}</td>
+          <td class="mono">${s.codigo}</td>
+          <td>${escapeHtml(s.nome)}</td>
+          <td class="muted small">${escapeHtml(responsavelNome(s.cpfResponsavel))}</td>
+          <td class="mono" style="color:${s.saldo<0?'var(--coral)':'inherit'};font-weight:700">${fmtMoney(s.saldo)}</td>
+          <td class="mono small">${s.limiteDiario>0?fmtMoney(s.limiteDiario):'—'}</td>
+          <td>${s.ativo!==false?'<span class="badge badge-green">Ativo</span>':'<span class="badge badge-coral">Inativo</span>'}</td>
+          <td class="row gap8">
+            <button class="btn btn-ghost btn-sm" data-editstudent="${s.id}">Editar</button>
+            <button class="btn btn-ghost btn-sm" data-extrato="${s.id}">Extrato PDF</button>
+          </td>
         </tr>
-      `;
-    }).join('');
-  }
-
-  const container = document.getElementById('extratoArea');
-  container.innerHTML = `
-    <div class="extrato-recibo">
-      <h4>${DATA.config.nome}</h4>
-      <p style="text-align:center; font-size:13px; margin:-5px 0 15px;" class="muted">EXTRATO DETALHADO DE CONSUMO</p>
-      
-      <div class="dados-linha"><span>Código do Aluno:</span><strong>#${s.code}</strong></div>
-      <div class="dados-linha"><span>Nome do Aluno:</span><strong>${s.name}</strong></div>
-      <div class="dados-linha"><span>Turma:</span><strong>${s.className || 'Não Informada'}</strong></div>
-      <div class="dados-linha"><span>Responsável:</span><strong>${s.respName || 'Não Informado'}</strong></div>
-      <div class="dados-linha"><span>CPF do Responsável:</span><strong>${s.respCpf || 'Não Informado'}</strong></div>
-      <div class="dados-linha" style="border-bottom: 2px solid var(--line); margin-bottom: 15px;">
-        <span>Saldo Atual em Conta:</span><strong style="font-family:var(--font-mono); font-size:16px;">${fmtMoney(s.balance)}</strong>
-      </div>
-      
-      <h5 style="font-family:var(--font-display); margin:15px 0 8px; font-size:15px; color:var(--primary);">Movimentações Recentes</h5>
-      <table style="width:100%; font-size:12px;">
-        <thead>
-          <tr>
-            <th style="padding:4px 6px;">Data</th>
-            <th style="padding:4px 6px;">Tipo</th>
-            <th style="padding:4px 6px;">Descrição</th>
-            <th style="padding:4px 6px;">Valor</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${historicoHtml}
-        </tbody>
-      </table>
+      `).join('') : `<tr><td colspan="7"><div class="empty-state"><div class="ic">🎒</div>Nenhum aluno encontrado.</div></td></tr>`}
+      </tbody>
+    </table>
     </div>
+  </div>
   `;
-  openModalEl('extratoModalBg');
 }
 
-/* =========================================================
-   RECARGA E CRÉDITO
-========================================================= */
-function openRechargeModal(id){
-  const s = studentById(id);
-  if(!s) return;
-  document.getElementById('rechargeStudentId').value = id;
-  document.getElementById('rechargeStudentName').textContent = `${s.name} (${s.className || 'Sem turma'})`;
-  document.getElementById('rechargeAmount').value = '';
-  openModalEl('rechargeModalBg');
-}
-
-function confirmRecharge(){
-  const id = document.getElementById('rechargeStudentId').value;
-  const val = parseFloat(document.getElementById('rechargeAmount').value);
-  const s = studentById(id);
-  if(!s || isNaN(val) || val <= 0){
-    showToast('Digite um valor de recarga válido.', true);
-    return;
-  }
-  s.balance = +(s.balance + val).toFixed(2);
-  
-  if(!DATA.recharges) DATA.recharges = [];
-  DATA.recharges.push({
-    id: uid('recarga'),
-    studentId: id,
-    amount: val,
-    date: todayStr()
-  });
-
-  saveData();
-  closeModal('rechargeModalBg');
-  renderStudents();
-  if(currentSale.studentId === id) renderPdvStudentBox();
-  showToast(`Crédito de ${fmtMoney(val)} adicionado.`);
-}
-
-/* =========================================================
-   PRODUTOS
-========================================================= */
-document.getElementById('produtoSearch').addEventListener('input', renderProducts);
-
-function renderProducts(){
-  const q = document.getElementById('produtoSearch').value.trim().toLowerCase();
-  const tbody = document.getElementById('productsTbody');
-  const list = DATA.products.filter(p => !q || p.name.toLowerCase().includes(q) || (p.category||'').toLowerCase().includes(q));
-  if(!list.length){
-    tbody.innerHTML = `<tr><td colspan="6"><div class="empty"><div class="big">Nenhum produto cadastrado</div><div>Adicione produtos.</div></div></td></tr>`;
-  } else {
-    tbody.innerHTML = list.map(p=>`
-      <tr>
-        <td><strong>${p.name}</strong></td>
-        <td>${p.category||'—'}</td>
-        <td style="font-family:var(--font-mono);">${fmtMoney(p.price)}</td>
-        <td>${p.stock}</td>
-        <td>${p.active===false ? '<span class="badge bad">Inativo</span>' : '<span class="badge good">Ativo</span>'}</td>
-        <td>
-          <button class="icon" onclick="openProductModal('${p.id}')">✎</button>
-          <button class="icon" onclick="toggleProductActive('${p.id}')">⏻</button>
-        </td>
-      </tr>`).join('');
-  }
-}
-
-function openProductModal(id){
-  document.getElementById('productModalTitle').textContent = id ? 'Editar produto' : 'Novo produto';
-  const p = id ? productById(id) : null;
-  document.getElementById('productId').value = id || '';
-  document.getElementById('productName').value = p ? p.name : '';
-  document.getElementById('productCategory').value = p ? (p.category||'') : '';
-  document.getElementById('productPrice').value = p ? p.price : '';
-  document.getElementById('productStock').value = p ? p.stock : '';
-  openModalEl('productModalBg');
-}
-
-function saveProduct(){
-  const id = document.getElementById('productId').value;
-  const name = document.getElementById('productName').value.trim();
-  const category = document.getElementById('productCategory').value.trim();
-  const price = parseFloat(document.getElementById('productPrice').value) || 0;
-  const stock = parseInt(document.getElementById('productStock').value) || 0;
-
-  if(!name || price <= 0){
-    showToast('Nome e preço são obrigatórios.', true); return;
-  }
-  if(id){
-    const p = productById(id);
-    if(p){ p.name=name; p.category=category; p.price=price; p.stock=stock; }
-  } else {
-    DATA.products.push({ id: uid('produto'), name, category, price, stock, active:true });
-  }
-  saveData();
-  closeModal('productModalBg');
-  renderProducts();
-  showToast('Produto salvo.');
-}
-
-function toggleProductActive(id){
-  const p = productById(id); if(!p) return;
-  p.active = p.active === false ? true : false;
-  saveData(); renderProducts();
-}
-
-/* =========================================================
-   LANÇAMENTOS E FILTROS
-========================================================= */
-function renderPdvStudentFilterOptions(){
-  const sel = document.getElementById('filtroAluno');
-  sel.innerHTML = '<option value="">Todos</option>' + DATA.students.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
-}
-
-document.getElementById('filtroAluno').addEventListener('change', renderSales);
-document.getElementById('filtroDe').addEventListener('change', renderSales);
-document.getElementById('filtroAte').addEventListener('change', renderSales);
-document.getElementById('filtroRetro').addEventListener('change', renderSales);
-
-function clearFilters(){
-  document.getElementById('filtroAluno').value = '';
-  document.getElementById('filtroDe').value = '';
-  document.getElementById('filtroAte').value = '';
-  document.getElementById('filtroRetro').value = '';
-  renderSales();
-}
-
-function renderSales(){
-  const fAluno = document.getElementById('filtroAluno').value;
-  const fDe = document.getElementById('filtroDe').value;
-  const fAte = document.getElementById('filtroAte').value;
-  const fRetro = document.getElementById('filtroRetro').value;
-  const tbody = document.getElementById('salesTbody');
-  
-  let list = DATA.sales;
-  if(fAluno) list = list.filter(s => s.studentId === fAluno);
-  if(fDe) list = list.filter(s => s.date >= fDe);
-  if(fAte) list = list.filter(s => s.date <= fAte);
-  if(fRetro === '1') list = list.filter(s => s.date !== s.createdAt.slice(0,10));
-
-  list = [...list].sort((a,b) => b.createdAt.localeCompare(a.createdAt));
-
-  if(!list.length){
-    tbody.innerHTML = `<tr><td colspan="6"><div class="empty">Nenhum lançamento encontrado.</div></td></tr>`;
-    return;
-  }
-
-  tbody.innerHTML = list.map(s => {
-    const student = studentById(s.studentId);
-    const itemSummary = s.items.map(i => `${i.qty}x ${i.name}`).join(', ');
-    const isRetro = s.date !== s.createdAt.slice(0,10);
+/* ---------------- Produtos ---------------- */
+function renderProdutos(){
+  return `
+  <div class="page-head">
+    <div><h1>Produtos</h1><p>Cadastre produtos com foto, organizados por categoria.</p></div>
+    <div class="row gap8">
+      <button class="btn btn-ghost" id="btnExportProdutos">Exportar PDF</button>
+      <button class="btn btn-primary" id="btnNovoProduto">+ Novo produto</button>
+    </div>
+  </div>
+  ${DB.categories.map(cat=>{
+    const items = DB.products.filter(p=>p.categoria===cat);
+    if(!items.length) return '';
     return `
-      <tr>
-        <td><strong>${student ? student.name : 'Ex-aluno'}</strong></td>
-        <td>${itemSummary}</td>
-        <td style="font-family:var(--font-mono);">${fmtMoney(s.total)}</td>
-        <td>${fmtDate(s.date)} ${isRetro ? '<span class="badge retro">Retroativo</span>' : ''}</td>
-        <td class="muted">${fmtDate(s.createdAt.slice(0,10))} às ${s.createdAt.slice(11,16)}</td>
-        <td><button class="icon delete" onclick="deleteSale('${s.id}')">✕</button></td>
-      </tr>`;
-  }).join('');
-}
-
-function deleteSale(saleId){
-  if(!confirm('Deseja realmente excluir/estornar esta venda?')) return;
-  const index = DATA.sales.findIndex(s => s.id === saleId);
-  if(index===-1) return;
-  const sale = DATA.sales[index];
-  const s = studentById(sale.studentId);
-  if(s) s.balance = +(s.balance + sale.total).toFixed(2);
-  sale.items.forEach(i=>{
-    const p = productById(i.productId);
-    if(p) p.stock += i.qty;
-  });
-  DATA.sales.splice(index,1);
-  saveData();
-  renderSales();
-  renderStudents();
-  renderProducts();
-  showToast('Lançamento estornado!');
-}
-
-/* =========================================================
-   RELATÓRIOS
-========================================================= */
-function renderReports(){
-  const faturado = DATA.sales.reduce((a,s)=>a+s.total,0);
-  const estoqueBaixo = DATA.products.filter(p => p.active!==false && p.stock <= 5).length;
-  const saldoCustodia = DATA.students.reduce((a,s)=>a+s.balance,0);
-
-  document.getElementById('kpiBox').innerHTML = `
-    <div class="kpi"><div class="label">Total de Vendas</div><div class="value">${fmtMoney(faturado)}</div></div>
-    <div class="kpi"><div class="label">Alunos Ativos</div><div class="value">${DATA.students.filter(s=>s.active!==false).length}</div></div>
-    <div class="kpi"><div class="label">Saldo em Custódia</div><div class="value">${fmtMoney(saldoCustodia)}</div></div>
-    <div class="kpi"><div class="label">Estoque Crítico (≤5)</div><div class="value">${estoqueBaixo} prod.</div></div>
+    <h3 class="mt24 mb12" style="font-size:16px;color:var(--primary-dark)">${escapeHtml(cat)}</h3>
+    <div class="grid-cards">
+      ${items.map(pr=>`
+        <div class="prod-card" style="cursor:default">
+          <div class="prod-thumb" style="${pr.foto?`background-image:url('${pr.foto}')`:''}">${pr.foto?'':'🍽️'}</div>
+          <div class="prod-body">
+            <div class="prod-name">${escapeHtml(pr.nome)}</div>
+            <div class="prod-price">${fmtMoney(pr.preco)}</div>
+            <div class="row gap8 mt8">
+              <button class="btn btn-ghost btn-sm" data-editproduct="${pr.id}">Editar</button>
+              ${pr.ativo===false?'<span class="badge badge-coral">Inativo</span>':''}
+            </div>
+          </div>
+        </div>
+      `).join('')}
+    </div>`;
+  }).join('') || `<div class="empty-state"><div class="ic">🍔</div>Nenhum produto cadastrado ainda.</div>`}
   `;
-
-  const aMap = {};
-  DATA.sales.forEach(s => aMap[s.studentId] = (aMap[s.studentId]||0) + s.total);
-  const repAlunos = DATA.students.map(s => ({ name: s.name, total: aMap[s.id]||0, compras: DATA.sales.filter(v=>v.studentId===s.id).length }))
-    .sort((a,b)=>b.total - a.total).slice(0,5);
-  document.getElementById('repAlunoTbody').innerHTML = repAlunos.map(a => `<tr><td><strong>${a.name}</strong></td><td>${a.compras}</td><td style="font-family:var(--font-mono);">${fmtMoney(a.total)}</td></tr>`).join('');
-
-  const pMap = {};
-  DATA.sales.forEach(s => s.items.forEach(i => {
-    if(!pMap[i.productId]) pMap[i.productId] = { name: i.name, qty: 0, total: 0 };
-    pMap[i.productId].qty += i.qty;
-    pMap[i.productId].total += (i.qty * i.price);
-  }));
-  const repProds = Object.values(pMap).sort((a,b)=>b.qty - a.qty).slice(0,5);
-  document.getElementById('repProdTbody').innerHTML = repProds.map(p => `<tr><td><strong>${p.name}</strong></td><td>${p.qty} un.</td><td style="font-family:var(--font-mono);">${fmtMoney(p.total)}</td></tr>`).join('');
-
-  const repEstoque = DATA.products.filter(p=>p.active!==false && p.stock<=5);
-  document.getElementById('repEstoqueTbody').innerHTML = repEstoque.map(p => `<tr><td><strong>${p.name}</strong></td><td><span class="badge bad">${p.stock} un.</span></td></tr>`).join('');
 }
 
-/* =========================================================
-   CONFIGURAÇÕES
-========================================================= */
+/* ---------------- Categorias ---------------- */
+function renderCategorias(){
+  return `
+  <div class="page-head"><div><h1>Categorias</h1><p>Organize o PDV separando os produtos em categorias.</p></div></div>
+  <div class="card pad" style="max-width:480px">
+    <div class="row gap8 mb16">
+      <input type="text" id="novaCategoriaInput" placeholder="Nova categoria (ex: Sorvetes)" value="${escapeHtml(state.newCategoryInput)}">
+      <button class="btn btn-primary" id="btnAddCategoria">Adicionar</button>
+    </div>
+    ${DB.categories.map(c=>{
+      const count = DB.products.filter(p=>p.categoria===c).length;
+      return `<div class="row between" style="padding:10px 0;border-bottom:1px solid var(--line)">
+        <div>${escapeHtml(c)} <span class="faint small">(${count} produto${count!==1?'s':''})</span></div>
+        <button class="btn btn-ghost btn-sm" data-delcat="${escapeHtml(c)}">Remover</button>
+      </div>`;
+    }).join('')}
+  </div>
+  `;
+}
+
+/* ---------------- Relatórios ---------------- */
+function renderRelatorios(){
+  const total = DB.transactions.reduce((a,t)=> a + (t.tipo==='consumo'? t.valor : 0), 0);
+  const totalRecarga = DB.transactions.reduce((a,t)=> a + (t.tipo==='recarga'? t.valor : 0), 0);
+  const hoje = DB.transactions.filter(t=>t.data===todayStr());
+  return `
+  <div class="page-head"><div><h1>Relatórios</h1><p>Visão geral das vendas e recargas.</p></div></div>
+  <div class="grid-cards" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr));margin-bottom:22px">
+    <div class="kpi"><div class="v">${fmtMoney(total)}</div><div class="l">Total consumido</div></div>
+    <div class="kpi"><div class="v">${fmtMoney(totalRecarga)}</div><div class="l">Total recarregado</div></div>
+    <div class="kpi"><div class="v">${DB.students.length}</div><div class="l">Alunos cadastrados</div></div>
+    <div class="kpi"><div class="v">${hoje.length}</div><div class="l">Lançamentos hoje</div></div>
+  </div>
+  <div class="card">
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>Data</th><th>Aluno</th><th>Tipo</th><th>Descrição</th><th>Valor</th></tr></thead>
+      <tbody>
+      ${[...DB.transactions].sort((a,b)=> (b.data+b.criadoEm) > (a.data+a.criadoEm)?1:-1).slice(0,60).map(t=>{
+        const s = DB.students.find(s=>s.id===t.studentId);
+        return `<tr>
+          <td class="mono small">${fmtDateBR(t.data)}</td>
+          <td>${s?escapeHtml(s.nome):'—'}</td>
+          <td>${t.tipo==='consumo'?'<span class="badge badge-amber">Consumo</span>':'<span class="badge badge-green">Recarga</span>'}</td>
+          <td class="small muted">${t.tipo==='consumo'?(t.itens||[]).map(i=>i.qtd+'x '+escapeHtml(i.nome)).join(', '):'Recarga de saldo'}</td>
+          <td class="mono" style="font-weight:700">${t.tipo==='consumo'?'-':'+'}${fmtMoney(t.valor)}</td>
+        </tr>`;
+      }).join('') || `<tr><td colspan="5"><div class="empty-state">Nenhum lançamento ainda.</div></td></tr>`}
+      </tbody>
+    </table>
+    </div>
+  </div>
+  `;
+}
+
+/* ---------------- Config (operador) ---------------- */
 function renderConfig(){
-  document.getElementById('cfgModo').value = DATA.config.modo || 'prepago';
-  document.getElementById('cfgNome').value = DATA.config.nome || 'Minha Cantina';
-  document.getElementById('cfgAdminPass').value = DATA.config.adminPass || '1234';
+  return `
+  <div class="page-head"><div><h1>Configurações</h1><p>Segurança de acesso do operador.</p></div></div>
+  <div class="card pad" style="max-width:420px">
+    <h3 style="margin-top:0;font-size:16px">Trocar senha do operador</h3>
+    <form id="formTrocarSenhaOperador">
+      <div class="field"><label>Senha atual</label><input type="password" name="atual"></div>
+      <div class="field"><label>Nova senha</label><input type="password" name="nova"></div>
+      <div class="field"><label>Confirmar nova senha</label><input type="password" name="nova2"></div>
+      ${state.errorMsg?`<div class="err mb12">${escapeHtml(state.errorMsg)}</div>`:''}
+      <button class="btn btn-primary btn-block" type="submit">Salvar nova senha</button>
+    </form>
+    <p class="hint mt12">A senha só muda quando você a redefine por aqui — ela não volta sozinha para 1234.</p>
+  </div>
+  `;
 }
 
-function saveConfig(){
-  DATA.config.modo = document.getElementById('cfgModo').value;
-  DATA.config.nome = document.getElementById('cfgNome').value.trim();
-  DATA.config.adminPass = document.getElementById('cfgAdminPass').value.trim();
-  saveData();
-  document.querySelector('.brand h1').innerHTML = `${DATA.config.nome || 'Cantina'}<span class="dot">.</span>em Dia`;
-  showToast('Configurações salvas!');
+/* ---------------- Modal: Produto ---------------- */
+function renderProductModal(){
+  const p = state.editingProduct || { id:null, nome:'', categoria:DB.categories[0]||'Outros', preco:'', foto:'', ativo:true };
+  return `
+  <div class="modal-overlay" id="productModalOverlay">
+    <div class="modal">
+      <div class="modal-head"><h3>${p.id?'Editar produto':'Novo produto'}</h3><button class="close-x" id="closeProductModal">✕</button></div>
+      <div class="modal-body">
+        <form id="formProduct">
+          <div class="row gap16 mb12">
+            <div class="thumb-upload" id="thumbUploadBtn">
+              ${p.foto?`<img src="${p.foto}" id="thumbPreviewImg">`:'📷'}
+            </div>
+            <input type="file" id="fotoInput" accept="image/*" style="display:none">
+            <div class="grow">
+              <div class="field" style="margin-bottom:8px"><label>Nome do produto</label><input type="text" name="nome" value="${escapeHtml(p.nome)}" placeholder="Ex: Coxinha"></div>
+              <div class="row gap8">
+                <div class="field grow" style="margin:0"><label>Preço (R$)</label><input type="number" step="0.01" min="0" name="preco" value="${p.preco}"></div>
+              </div>
+            </div>
+          </div>
+          <div class="field"><label>Categoria</label>
+            <select name="categoria">${DB.categories.map(c=>`<option ${c===p.categoria?'selected':''}>${escapeHtml(c)}</option>`).join('')}</select>
+          </div>
+          <label class="row gap8" style="text-transform:none;font-weight:600;font-size:13.5px;color:var(--ink)"><input type="checkbox" name="ativo" ${p.ativo!==false?'checked':''} style="width:auto"> Produto ativo (aparece no PDV)</label>
+          <div class="row between mt20">
+            ${p.id?`<button type="button" class="btn btn-ghost" id="btnDeleteProduct" style="color:var(--coral)">Excluir</button>`:'<span></span>'}
+            <button class="btn btn-primary" type="submit">Salvar produto</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>`;
 }
 
-/* =========================================================
-   BOOTSTRAP / INICIALIZAÇÃO
-========================================================= */
-window.onload = () => {
-  setTimeout(async () => {
-    if(typeof window.storage === 'undefined') {
-      window.storage = {
-        get: () => Promise.resolve({ value: null }),
-        set: () => Promise.resolve()
-      };
-    }
-    await loadData();
+/* ---------------- Modal: Aluno ---------------- */
+function renderStudentModal(){
+  const s = state.editingStudent || { id:null, codigo:nextStudentCode(), nome:'', cpfResponsavel:'', saldo:0, limiteDiario:0, produtosBloqueados:[], ativo:true };
+  return `
+  <div class="modal-overlay" id="studentModalOverlay">
+    <div class="modal">
+      <div class="modal-head"><h3>${s.id?'Editar aluno':'Novo aluno'}</h3><button class="close-x" id="closeStudentModal">✕</button></div>
+      <div class="modal-body">
+        <form id="formStudent">
+          <div class="row gap8">
+            <div class="field grow"><label>Nome do aluno</label><input type="text" name="nome" value="${escapeHtml(s.nome)}"></div>
+            <div class="field" style="width:140px"><label>Código</label><input type="text" name="codigo" class="mono" value="${escapeHtml(s.codigo)}"></div>
+          </div>
+          <div class="field"><label>CPF do responsável (opcional)</label>
+            <select name="cpfResponsavel">
+              <option value="">— sem vínculo —</option>
+              ${DB.responsaveis.map(r=>`<option value="${r.cpf}" ${r.cpf===s.cpfResponsavel?'selected':''}>${escapeHtml(r.nome)} (${fmtCPF(r.cpf)})</option>`).join('')}
+            </select>
+          </div>
+          <div class="row gap8">
+            <div class="field grow"><label>${s.id?'Saldo atual (R$)':'Saldo inicial (R$)'}</label><input type="number" step="0.01" name="saldo" value="${s.saldo}"></div>
+            <div class="field grow"><label>Limite de gasto por dia (R$, 0 = sem limite)</label><input type="number" step="0.01" min="0" name="limiteDiario" value="${s.limiteDiario||0}"></div>
+          </div>
+          <label class="row gap8" style="text-transform:none;font-weight:600;font-size:13.5px;color:var(--ink)"><input type="checkbox" name="ativo" ${s.ativo!==false?'checked':''} style="width:auto"> Aluno ativo</label>
+          <div class="field mt12"><label>Bloquear produtos para este aluno</label>
+            <div class="checklist">
+              ${DB.products.length? DB.products.map(p=>`
+                <label><input type="checkbox" name="bloq" value="${p.id}" ${(s.produtosBloqueados||[]).includes(p.id)?'checked':''}> ${escapeHtml(p.nome)}</label>
+              `).join('') : '<div class="small faint">Nenhum produto cadastrado ainda.</div>'}
+            </div>
+          </div>
+          <div class="row between mt20">
+            ${s.id?`<button type="button" class="btn btn-ghost" id="btnDeleteStudent" style="color:var(--coral)">Excluir aluno</button>`:'<span></span>'}
+            <button class="btn btn-primary" type="submit">Salvar aluno</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ============================================================
+   RESPONSÁVEL — shell + views
+   ============================================================ */
+function renderResponsavelShell(){
+  const resp = DB.responsaveis.find(r=>r.cpf===session.cpf);
+  const tabs = [['painel','Meus filhos'],['config','Minha conta']];
+  return `
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">Lanche<span>Card+</span></div>
+      <div class="nav">${tabs.map(([k,l])=>`<button data-respview="${k}" class="${state.responsavelView===k?'active':''}">${l}</button>`).join('')}</div>
+      <div class="userchip">
+        <div class="avatar">${(resp.nome||'?').slice(0,1).toUpperCase()}</div>
+        <div><div style="font-weight:700">${escapeHtml(resp.nome)}</div></div>
+        <button class="btn btn-ghost btn-sm" id="btnLogout">Sair</button>
+      </div>
+    </div>
+  </div>
+  <select id="mobileNavSelectResp" style="display:none;margin:10px 16px;width:calc(100% - 32px)">
+    ${tabs.map(([k,l])=>`<option value="${k}" ${state.responsavelView===k?'selected':''}>${l}</option>`).join('')}
+  </select>
+  <div class="page">
+    ${state.responsavelView==='painel' ? renderPainelResponsavel(resp) : renderContaResponsavel(resp)}
+  </div>
+  `;
+}
+
+function renderPainelResponsavel(resp){
+  const filhos = DB.students.filter(s=>s.cpfResponsavel===resp.cpf);
+  return `
+  <div class="page-head"><div><h1>Meus filhos</h1><p>Acompanhe saldo, compras e defina limites.</p></div></div>
+  ${filhos.length? `<div class="grid-cards" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr))">
+    ${filhos.map(s=>`
+      <div class="child-card">
+        <div class="row between">
+          <div>
+            <div style="font-weight:800;font-size:16px">${escapeHtml(s.nome)}</div>
+            <div class="mono small muted">Código: ${s.codigo}</div>
+          </div>
+          ${s.ativo!==false?'<span class="badge badge-green">Ativo</span>':'<span class="badge badge-coral">Inativo</span>'}
+        </div>
+        <div class="mt16 saldo-big ${s.saldo<0?'neg':''}">${fmtMoney(s.saldo)}</div>
+        <div class="small muted">Limite diário: ${s.limiteDiario>0?fmtMoney(s.limiteDiario):'sem limite'}</div>
+        <div class="row gap8 mt16 wrap">
+          <button class="btn btn-accent btn-sm" data-recarregarfilho="${s.id}">Recarregar saldo</button>
+          <button class="btn btn-ghost btn-sm" data-extratofilho="${s.id}">Extrato PDF</button>
+          <button class="btn btn-ghost btn-sm" data-limitesfilho="${s.id}">Limites e bloqueios</button>
+        </div>
+      </div>
+    `).join('')}
+  </div>` : `<div class="empty-state"><div class="ic">🎒</div>Nenhum filho vinculado à sua conta ainda. Fale com a cantina para vincular um aluno ao seu CPF.</div>`}
+  `;
+}
+
+function renderContaResponsavel(resp){
+  return `
+  <div class="page-head"><div><h1>Minha conta</h1><p>Dados de acesso.</p></div></div>
+  <div class="card pad mb20" style="max-width:420px">
+    <div class="small faint">NOME</div><div class="mb12" style="font-weight:700">${escapeHtml(resp.nome)}</div>
+    <div class="small faint">CPF</div><div class="mb12 mono">${fmtCPF(resp.cpf)}</div>
+    <div class="small faint">E-MAIL</div><div class="mono">${resp.email? escapeHtml(resp.email) : '—'}</div>
+  </div>
+  <div class="card pad" style="max-width:420px">
+    <h3 style="margin-top:0;font-size:16px">Trocar senha</h3>
+    <form id="formTrocarSenhaResp">
+      <div class="field"><label>Senha atual</label><input type="password" name="atual"></div>
+      <div class="field"><label>Nova senha</label><input type="password" name="nova"></div>
+      <div class="field"><label>Confirmar nova senha</label><input type="password" name="nova2"></div>
+      ${state.errorMsg?`<div class="err mb12">${escapeHtml(state.errorMsg)}</div>`:''}
+      <button class="btn btn-primary btn-block" type="submit">Salvar nova senha</button>
+    </form>
+  </div>
+  `;
+}
+
+/* ============================================================
+   PRINT: extrato e lista de produtos
+   ============================================================ */
+function printSection(html){
+  document.getElementById('printArea').innerHTML = html;
+  document.body.classList.add('printing');
+  window.focus();
+  window.print();
+}
+window.addEventListener('afterprint', ()=>{ document.body.classList.remove('printing'); });
+
+function buildExtratoHTML(student){
+  const tx = studentTx(student.id);
+  let saldoCorrido = 0;
+  const rows = [...tx].sort((a,b)=> (a.data+a.criadoEm) > (b.data+b.criadoEm) ? 1 : -1);
+  const withRunning = rows.map(t=>{ saldoCorrido += (t.tipo==='recarga'? t.valor : -t.valor); return {...t, saldoCorrido}; });
+  withRunning.reverse();
+  const totalConsumo = tx.filter(t=>t.tipo==='consumo').reduce((a,t)=>a+t.valor,0);
+  const totalRecarga = tx.filter(t=>t.tipo==='recarga').reduce((a,t)=>a+t.valor,0);
+  return `
+  <div class="print-doc">
+    <div class="print-head">
+      <div>
+        <h2>Extrato — ${escapeHtml(student.nome)}</h2>
+        <div class="small">Código: ${student.codigo} · Responsável: ${escapeHtml(responsavelNome(student.cpfResponsavel))}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-weight:800;font-family:'JetBrains Mono',monospace">Kantina Casa da Gilda</div>
+        <div class="small">Emitido em ${fmtDateBR(todayStr())}</div>
+      </div>
+    </div>
+    <table class="print-table">
+      <thead><tr><th>Data</th><th>Tipo</th><th>Descrição</th><th>Valor</th><th>Saldo após</th></tr></thead>
+      <tbody>
+      ${withRunning.length? withRunning.map(t=>`
+        <tr>
+          <td>${fmtDateBR(t.data)}</td>
+          <td>${t.tipo==='consumo'?'Consumo':'Recarga'}</td>
+          <td>${t.tipo==='consumo'?(t.itens||[]).map(i=>i.qtd+'x '+escapeHtml(i.nome)).join(', '):'Recarga de saldo'}</td>
+          <td>${t.tipo==='consumo'?'-':'+'}${fmtMoney(t.valor)}</td>
+          <td>${fmtMoney(t.saldoCorrido)}</td>
+        </tr>`).join('') : `<tr><td colspan="5">Nenhum lançamento registrado.</td></tr>`}
+      </tbody>
+    </table>
+    <p class="small" style="margin-top:16px"><b>Total consumido:</b> ${fmtMoney(totalConsumo)} &nbsp;&nbsp; <b>Total recarregado:</b> ${fmtMoney(totalRecarga)} &nbsp;&nbsp; <b>Saldo atual:</b> ${fmtMoney(student.saldo)}</p>
+    <p class="small faint mt12">Use "Salvar como PDF" na janela de impressão do navegador para gerar o arquivo PDF.</p>
+  </div>`;
+}
+function buildProdutosPDFHTML(){
+  return `
+  <div class="print-doc">
+    <div class="print-head">
+      <h2>Catálogo de produtos</h2>
+      <div style="text-align:right"><div style="font-weight:800;font-family:'JetBrains Mono',monospace">Kantina Casa da Gilda</div><div class="small">Emitido em ${fmtDateBR(todayStr())}</div></div>
+    </div>
+    <table class="print-table">
+      <thead><tr><th>Categoria</th><th>Produto</th><th>Preço</th><th>Status</th></tr></thead>
+      <tbody>
+      ${DB.products.map(p=>`<tr><td>${escapeHtml(p.categoria)}</td><td>${escapeHtml(p.nome)}</td><td>${fmtMoney(p.preco)}</td><td>${p.ativo!==false?'Ativo':'Inativo'}</td></tr>`).join('') || '<tr><td colspan="4">Nenhum produto cadastrado.</td></tr>'}
+      </tbody>
+    </table>
+  </div>`;
+}
+
+/* ============================================================
+   EVENTS
+   ============================================================ */
+function wireEvents(){
+  const app = document.getElementById('app');
+
+  // ---- login tabs ----
+  app.querySelectorAll('[data-loginTab]').forEach(b=>b.onclick=()=>setState({loginTab:b.dataset.logintab, errorMsg:''}));
+  const cpfInput = document.getElementById('loginCpf');
+  if(cpfInput) cpfInput.oninput = ()=>{ cpfInput.value = fmtCPF(cpfInput.value); };
+
+  const formOp = document.getElementById('formOperadorLogin');
+  if(formOp) formOp.onsubmit = e=>{
+    e.preventDefault();
+    const senha = new FormData(formOp).get('senha');
+    if(senha === DB.config.operatorPassword){ session={tipo:'operador'}; setState({view:'app', errorMsg:'', operatorView:'pdv'}); toast('Bem-vindo(a)!'); }
+    else setState({errorMsg:'Senha incorreta.'});
+  };
+  const formResp = document.getElementById('formResponsavelLogin');
+  if(formResp) formResp.onsubmit = e=>{
+    e.preventDefault();
+    const fd = new FormData(formResp);
+    const cpf = onlyDigits(fd.get('cpf'));
+    const senha = fd.get('senha');
+    const r = DB.responsaveis.find(r=>r.cpf===cpf);
+    if(!r){ setState({errorMsg:'CPF não encontrado. Cadastre-se abaixo.'}); return; }
+    if(r.senha !== senha){ setState({errorMsg:'Senha incorreta.'}); return; }
+    session = {tipo:'responsavel', cpf:r.cpf};
+    setState({errorMsg:'', responsavelView:'painel'});
+    toast('Bem-vindo(a), '+r.nome+'!');
+  };
+  const goReg = document.getElementById('goRegister');
+  if(goReg) goReg.onclick = ()=>setState({view:'register', errorMsg:'', regData:{ nome:'', cpf:'', email:'', senha:'', senha2:'', filhos:[{nome:''}] }});
+  const backLogin = document.getElementById('backToLogin');
+  if(backLogin) backLogin.onclick = ()=>setState({view:'login', errorMsg:''});
+
+  // ---- register form ----
+  const regCpf = document.getElementById('regCpf');
+  if(regCpf) regCpf.oninput = ()=>{ regCpf.value = fmtCPF(regCpf.value); };
+  const addFilho = document.getElementById('addFilho');
+  if(addFilho) addFilho.onclick = ()=>{ state.regData.filhos.push({nome:''}); render(); };
+  app.querySelectorAll('.removeFilho').forEach(b=>b.onclick=()=>{ state.regData.filhos.splice(parseInt(b.dataset.idx),1); render(); });
+  app.querySelectorAll('.filhoNome').forEach(inp=>inp.oninput=()=>{ state.regData.filhos[parseInt(inp.dataset.idx)].nome = inp.value; });
+
+  const formRegister = document.getElementById('formRegister');
+  if(formRegister) formRegister.onsubmit = async e=>{
+    e.preventDefault();
+    const fd = new FormData(formRegister);
+    const nome = (fd.get('nome')||'').trim();
+    const cpf = onlyDigits(fd.get('cpf'));
+    const email = (fd.get('email')||'').trim();
+    const senha = fd.get('senha')||'';
+    const senha2 = fd.get('senha2')||'';
+    const filhosNomes = state.regData.filhos.map(f=>f.nome.trim()).filter(Boolean);
+
+    if(!nome){ setState({errorMsg:'Informe seu nome completo.'}); return; }
+    if(!validCPF(cpf)){ setState({errorMsg:'CPF inválido. Confira os números digitados.'}); return; }
+    if(DB.responsaveis.find(r=>r.cpf===cpf)){ setState({errorMsg:'Este CPF já possui cadastro. Faça login.'}); return; }
+    if(senha.length<4){ setState({errorMsg:'A senha deve ter ao menos 4 caracteres.'}); return; }
+    if(senha!==senha2){ setState({errorMsg:'As senhas não conferem.'}); return; }
+    if(!filhosNomes.length){ setState({errorMsg:'Adicione ao menos um aluno.'}); return; }
+
+    DB.responsaveis.push({ cpf, nome, email, senha, primeiroAcesso:false });
+    filhosNomes.forEach(fnome=>{
+      DB.students.push({ id:uid('st_'), codigo:nextStudentCode(), nome:fnome, cpfResponsavel:cpf, saldo:0, limiteDiario:0, produtosBloqueados:[], ativo:true });
+    });
+    await persist('responsaveis'); await persist('students');
+    session = {tipo:'responsavel', cpf};
+    setState({view:'app', errorMsg:'', responsavelView:'painel'});
+    toast('Cadastro criado com sucesso!');
+  };
+
+  // ---- forced password change ----
+  const formForce = document.getElementById('formForcePw');
+  if(formForce) formForce.onsubmit = async e=>{
+    e.preventDefault();
+    const fd = new FormData(formForce);
+    const s1=fd.get('s1'), s2=fd.get('s2');
+    if(s1.length<4){ setState({errorMsg:'Mínimo de 4 caracteres.'}); return; }
+    if(s1!==s2){ setState({errorMsg:'As senhas não conferem.'}); return; }
+    const r = DB.responsaveis.find(r=>r.cpf===session.cpf);
+    r.senha = s1; r.primeiroAcesso = false;
+    await persist('responsaveis');
+    setState({errorMsg:''});
+    toast('Senha atualizada!');
+  };
+  const logoutForce = document.getElementById('logoutForce');
+  if(logoutForce) logoutForce.onclick = ()=>{ session=null; setState({view:'login'}); };
+
+  // ---- logout ----
+  const btnLogout = document.getElementById('btnLogout');
+  if(btnLogout) btnLogout.onclick = ()=>{ session=null; setState({view:'login', errorMsg:''}); };
+
+  // ---- operator nav ----
+  app.querySelectorAll('[data-opview]').forEach(b=>b.onclick=()=>setState({operatorView:b.dataset.opview, errorMsg:''}));
+  const mobileSel = document.getElementById('mobileNavSelect');
+  if(mobileSel){ mobileSel.style.display = window.innerWidth<=760 ? 'block':'none'; mobileSel.onchange=()=>setState({operatorView:mobileSel.value}); }
+  app.querySelectorAll('[data-respview]').forEach(b=>b.onclick=()=>setState({responsavelView:b.dataset.respview, errorMsg:''}));
+  const mobileSelResp = document.getElementById('mobileNavSelectResp');
+  if(mobileSelResp){ mobileSelResp.style.display = window.innerWidth<=760 ? 'block':'none'; mobileSelResp.onchange=()=>setState({responsavelView:mobileSelResp.value}); }
+
+  // ---- PDV ----
+const btnPdvBuscar = document.getElementById('pdvBuscar');
+if(btnPdvBuscar) {
+  btnPdvBuscar.onclick = () => {
+    const input = document.getElementById('pdvCode').value;
+    const aluno = findStudentByCode(input); // Usa a função que alteramos no passo 1
     
-    if(!DATA.students.length && !DATA.products.length){
-      DATA.products = [
-        { id: 'p1', name: 'Suco de Laranja Natural', category: 'Bebidas', price: 6.50, stock: 45, active: true },
-        { id: 'p2', name: 'Misto Quente Integral', category: 'Lanches', price: 8.50, stock: 20, active: true },
-        { id: 'p3', name: 'Pão de Queijo Redondo', category: 'Salgados', price: 4.00, stock: 3, active: true },
-        { id: 'p4', name: 'Cookie Choc', category: 'Doces', price: 5.00, stock: 12, active: true }
-      ];
-      DATA.students = [
-        { id: 's1', name: 'Ana Beatriz Souza', className: '8º Ano A', code: '1002', respName: 'Mariana de Souza', respCpf: '111.222.333-44', balance: 45.00, limit: 25.00, blockedIds: [], active: true },
-        { id: 's2', name: 'Carlos Henrique Lima', className: '9º Ano B', code: '4821', respName: 'Roberto Lima', respCpf: '999.888.777-66', balance: 8.50, limit: null, blockedIds: ['p4'], active: true }
-      ];
-      DATA.recharges = [
-        { id: 'r1', studentId: 's1', amount: 45.00, date: todayStr() }
-      ];
-      saveData();
-      render_all();
+    if(aluno) {
+      setState({ pdv: { ...state.pdv, student: aluno, codeInput: aluno.codigo } });
+      toast(`Aluno encontrado: ${aluno.nome}`);
+    } else {
+      toast('Aluno não encontrado!', true);
     }
-  }, 100);
-};
+  };
+}
+  const pdvBuscar = document.getElementById('pdvBuscar');
+  if(pdvBuscar){
+    const codeEl = document.getElementById('pdvCode');
+    const doSearch = ()=>{
+      const s = findStudentByCode(codeEl.value);
+      if(!s){ toast('Aluno não encontrado para este código.', true); return; }
+      state.pdv.student = s; state.pdv.cart=[]; state.pdv.codeInput=codeEl.value;
+      render();
+    };
+    pdvBuscar.onclick = doSearch;
+    codeEl.onkeydown = e=>{ if(e.key==='Enter'){ e.preventDefault(); doSearch(); } };
+    codeEl.oninput = ()=>{ state.pdv.codeInput = codeEl.value; };
+  }
+  const pdvDate = document.getElementById('pdvDate');
+  if(pdvDate) pdvDate.onchange = ()=>{ state.pdv.date = pdvDate.value; render(); };
+  const pdvTrocar = document.getElementById('pdvTrocarAluno');
+  if(pdvTrocar) pdvTrocar.onclick = ()=>{ state.pdv.student=null; state.pdv.cart=[]; state.pdv.codeInput=''; render(); };
+  app.querySelectorAll('[data-catfilter]').forEach(b=>b.onclick=()=>{ state.pdv.catFilter=b.dataset.catfilter; render(); });
+  app.querySelectorAll('[data-addcart]').forEach(b=>b.onclick=()=>{
+    const prodId=b.dataset.addcart; const pr=DB.products.find(p=>p.id===prodId);
+    const s = state.pdv.student;
+    if(s.produtosBloqueados && s.produtosBloqueados.includes(prodId)){ toast('Este produto está bloqueado para o aluno.', true); return; }
+    const existing = state.pdv.cart.find(c=>c.produtoId===prodId);
+    if(existing) existing.qtd++;
+    else state.pdv.cart.push({produtoId:prodId, nome:pr.nome, preco:pr.preco, qtd:1});
+    render();
+  });
+  app.querySelectorAll('[data-cartqty]').forEach(b=>b.onclick=()=>{
+    const id=b.dataset.cartqty, delta=parseInt(b.dataset.delta);
+    const line = state.pdv.cart.find(c=>c.produtoId===id);
+    line.qtd += delta;
+    if(line.qtd<=0) state.pdv.cart = state.pdv.cart.filter(c=>c.produtoId!==id);
+    render();
+  });
+  app.querySelectorAll('[data-cartremove]').forEach(b=>b.onclick=()=>{
+    state.pdv.cart = state.pdv.cart.filter(c=>c.produtoId!==b.dataset.cartremove); render();
+  });
+  const pdvFinalizar = document.getElementById('pdvFinalizar');
+  if(pdvFinalizar) pdvFinalizar.onclick = async ()=>{
+    const s = state.pdv.student;
+    const total = state.pdv.cart.reduce((a,c)=>a+c.preco*c.qtd,0);
+    if(s.limiteDiario>0){
+      const jaGasto = studentSpentOnDate(s.id, state.pdv.date);
+      if(jaGasto+total > s.limiteDiario){
+        const ok = confirm('Este lançamento ultrapassa o limite diário definido pelo responsável ('+fmtMoney(s.limiteDiario)+'). Deseja continuar mesmo assim?');
+        if(!ok) return;
+      }
+    }
+    const tx = { id:uid('tx_'), studentId:s.id, tipo:'consumo', data:state.pdv.date, criadoEm:new Date().toISOString(), itens: state.pdv.cart.map(c=>({produtoId:c.produtoId,nome:c.nome,preco:c.preco,qtd:c.qtd})), valor: total, operador:'operador' };
+    DB.transactions.push(tx);
+    s.saldo -= total;
+    await persist('transactions'); await persist('students');
+    toast('Venda lançada em '+fmtDateBR(state.pdv.date)+'!');
+    state.pdv.cart=[]; state.pdv.student=null; state.pdv.codeInput='';
+    render();
+  };
+
+  // ---- Recarga ----
+  const formRecarga = document.getElementById('formRecarga');
+  if(formRecarga) formRecarga.onsubmit = async e=>{
+    e.preventDefault();
+    const fd = new FormData(formRecarga);
+    const s = findStudentByCode(fd.get('codigo'));
+    if(!s){ toast('Aluno não encontrado.', true); return; }
+    const valor = parseFloat(fd.get('valor'));
+    if(!valor || valor<=0){ toast('Informe um valor válido.', true); return; }
+    const data = fd.get('data') || todayStr();
+    DB.transactions.push({ id:uid('tx_'), studentId:s.id, tipo:'recarga', data, criadoEm:new Date().toISOString(), valor, operador:'operador' });
+    s.saldo += valor;
+    await persist('transactions'); await persist('students');
+    toast('Recarga de '+fmtMoney(valor)+' lançada para '+s.nome+'.');
+    formRecarga.reset();
+  };
+
+  // ---- Alunos ----
+  const btnNovoAluno = document.getElementById('btnNovoAluno');
+  if(btnNovoAluno) btnNovoAluno.onclick = ()=>{ state.editingStudent=null; state.studentModalOpen=true; render(); };
+  const alunoSearch = document.getElementById('alunoSearch');
+  if(alunoSearch) alunoSearch.oninput = ()=>{ state.alunosSearch = alunoSearch.value; render(); };
+  app.querySelectorAll('[data-editstudent]').forEach(b=>b.onclick=()=>{
+    state.editingStudent = JSON.parse(JSON.stringify(DB.students.find(s=>s.id===b.dataset.editstudent)));
+    state.studentModalOpen = true; render();
+  });
+  app.querySelectorAll('[data-extrato]').forEach(b=>b.onclick=()=>{
+    const s = DB.students.find(s=>s.id===b.dataset.extrato);
+    printSection(buildExtratoHTML(s));
+  });
+
+  // ---- Produtos ----
+  const btnNovoProduto = document.getElementById('btnNovoProduto');
+  if(btnNovoProduto) btnNovoProduto.onclick = ()=>{ state.editingProduct=null; state.productModalOpen=true; render(); };
+  const btnExportProdutos = document.getElementById('btnExportProdutos');
+  if(btnExportProdutos) btnExportProdutos.onclick = ()=>printSection(buildProdutosPDFHTML());
+  app.querySelectorAll('[data-editproduct]').forEach(b=>b.onclick=()=>{
+    state.editingProduct = JSON.parse(JSON.stringify(DB.products.find(p=>p.id===b.dataset.editproduct)));
+    state.productModalOpen = true; render();
+  });
+
+  // ---- Categorias ----
+  const catInput = document.getElementById('novaCategoriaInput');
+  if(catInput) catInput.oninput = ()=>{ state.newCategoryInput = catInput.value; };
+  const btnAddCategoria = document.getElementById('btnAddCategoria');
+  if(btnAddCategoria) btnAddCategoria.onclick = async ()=>{
+    const name = (state.newCategoryInput||'').trim();
+    if(!name){ toast('Digite um nome de categoria.', true); return; }
+    if(DB.categories.some(c=>c.toLowerCase()===name.toLowerCase())){ toast('Essa categoria já existe.', true); return; }
+    DB.categories.push(name);
+    await persist('categories');
+    state.newCategoryInput='';
+    toast('Categoria adicionada!');
+    render();
+  };
+  app.querySelectorAll('[data-delcat]').forEach(b=>b.onclick=async ()=>{
+    const cat = b.dataset.delcat;
+    if(DB.categories.length<=1){ toast('Mantenha ao menos uma categoria.', true); return; }
+    if(!confirm('Remover a categoria "'+cat+'"? Produtos nela passarão para "Outros".')) return;
+    DB.products.forEach(p=>{ if(p.categoria===cat) p.categoria = DB.categories.find(c=>c!==cat) || 'Outros'; });
+    DB.categories = DB.categories.filter(c=>c!==cat);
+    await persist('categories'); await persist('products');
+    render();
+  });
+
+  // ---- Config operador ----
+  const formTrocarOp = document.getElementById('formTrocarSenhaOperador');
+  if(formTrocarOp) formTrocarOp.onsubmit = async e=>{
+    e.preventDefault();
+    const fd = new FormData(formTrocarOp);
+    const atual=fd.get('atual'), nova=fd.get('nova'), nova2=fd.get('nova2');
+    if(atual !== DB.config.operatorPassword){ setState({errorMsg:'Senha atual incorreta.'}); return; }
+    if(nova.length<4){ setState({errorMsg:'A nova senha deve ter ao menos 4 caracteres.'}); return; }
+    if(nova!==nova2){ setState({errorMsg:'As senhas não conferem.'}); return; }
+    DB.config.operatorPassword = nova;
+    await persist('config');
+    setState({errorMsg:''});
+    toast('Senha do operador atualizada com sucesso — ela permanece assim até você trocar novamente.');
+  };
+
+  // ---- Config responsável ----
+  const formTrocarResp = document.getElementById('formTrocarSenhaResp');
+  if(formTrocarResp) formTrocarResp.onsubmit = async e=>{
+    e.preventDefault();
+    const fd = new FormData(formTrocarResp);
+    const atual=fd.get('atual'), nova=fd.get('nova'), nova2=fd.get('nova2');
+    const r = DB.responsaveis.find(r=>r.cpf===session.cpf);
+    if(atual !== r.senha){ setState({errorMsg:'Senha atual incorreta.'}); return; }
+    if(nova.length<4){ setState({errorMsg:'A nova senha deve ter ao menos 4 caracteres.'}); return; }
+    if(nova!==nova2){ setState({errorMsg:'As senhas não conferem.'}); return; }
+    r.senha = nova;
+    await persist('responsaveis');
+    setState({errorMsg:''});
+    toast('Senha atualizada!');
+  };
+
+  // ---- Responsável: painel actions ----
+  app.querySelectorAll('[data-extratofilho]').forEach(b=>b.onclick=()=>{
+    const s = DB.students.find(s=>s.id===b.dataset.extratofilho);
+    printSection(buildExtratoHTML(s));
+  });
+  app.querySelectorAll('[data-recarregarfilho]').forEach(b=>b.onclick=async ()=>{
+    const s = DB.students.find(s=>s.id===b.dataset.recarregarfilho);
+    const val = prompt('Valor da recarga para '+s.nome+' (R$) — recarga simulada, sem gateway de pagamento real:');
+    if(val===null) return;
+    const valor = parseFloat(val.replace(',','.'));
+    if(!valor || valor<=0){ toast('Valor inválido.', true); return; }
+    DB.transactions.push({ id:uid('tx_'), studentId:s.id, tipo:'recarga', data:todayStr(), criadoEm:new Date().toISOString(), valor, operador:session.cpf });
+    s.saldo += valor;
+    await persist('transactions'); await persist('students');
+    toast('Recarga de '+fmtMoney(valor)+' realizada!');
+    render();
+  });
+  app.querySelectorAll('[data-limitesfilho]').forEach(b=>b.onclick=()=>{
+    state.editingStudent = JSON.parse(JSON.stringify(DB.students.find(s=>s.id===b.dataset.limitesfilho)));
+    state.studentModalOpen = true; render();
+  });
+
+  // ---- Product modal ----
+  const overlayProd = document.getElementById('productModalOverlay');
+  if(overlayProd){
+    overlayProd.addEventListener('click', e=>{ if(e.target===overlayProd){ state.productModalOpen=false; render(); } });
+    document.getElementById('closeProductModal').onclick = ()=>{ state.productModalOpen=false; render(); };
+    const thumbBtn = document.getElementById('thumbUploadBtn');
+    const fotoInput = document.getElementById('fotoInput');
+    thumbBtn.onclick = ()=>fotoInput.click();
+    fotoInput.onchange = async ()=>{
+      if(!fotoInput.files[0]) return;
+      const dataUrl = await resizeImage(fotoInput.files[0], 400, 0.72);
+      thumbBtn.innerHTML = `<img src="${dataUrl}" id="thumbPreviewImg">`;
+      thumbBtn.dataset.foto = dataUrl;
+    };
+    const formProduct = document.getElementById('formProduct');
+    formProduct.onsubmit = async e=>{
+      e.preventDefault();
+      const fd = new FormData(formProduct);
+      const nome = (fd.get('nome')||'').trim();
+      const preco = parseFloat(fd.get('preco'));
+      if(!nome){ toast('Informe o nome do produto.', true); return; }
+      if(isNaN(preco) || preco<0){ toast('Informe um preço válido.', true); return; }
+      const foto = thumbBtn.dataset.foto || (state.editingProduct? state.editingProduct.foto : '') || '';
+      if(state.editingProduct){
+        const p = DB.products.find(p=>p.id===state.editingProduct.id);
+        p.nome=nome; p.preco=preco; p.categoria=fd.get('categoria'); p.foto=foto; p.ativo = fd.get('ativo')==='on';
+      } else {
+        DB.products.push({ id:uid('pr_'), nome, preco, categoria:fd.get('categoria'), foto, ativo: fd.get('ativo')==='on' });
+      }
+      await persist('products');
+      state.productModalOpen=false; toast('Produto salvo!'); render();
+    };
+    const delBtn = document.getElementById('btnDeleteProduct');
+    if(delBtn) delBtn.onclick = async ()=>{
+      if(!confirm('Excluir este produto?')) return;
+      DB.products = DB.products.filter(p=>p.id!==state.editingProduct.id);
+      await persist('products');
+      state.productModalOpen=false; toast('Produto excluído.'); render();
+    };
+  }
+
+  // ---- Student modal ----
+  const overlayStud = document.getElementById('studentModalOverlay');
+  if(overlayStud){
+    overlayStud.addEventListener('click', e=>{ if(e.target===overlayStud){ state.studentModalOpen=false; render(); } });
+    document.getElementById('closeStudentModal').onclick = ()=>{ state.studentModalOpen=false; render(); };
+    const formStudent = document.getElementById('formStudent');
+    formStudent.onsubmit = async e=>{
+      e.preventDefault();
+      const fd = new FormData(formStudent);
+      const nome=(fd.get('nome')||'').trim();
+      const codigo=(fd.get('codigo')||'').trim().toUpperCase();
+      if(!nome){ toast('Informe o nome do aluno.', true); return; }
+      if(!codigo){ toast('Informe um código para o aluno.', true); return; }
+      const dupCode = DB.students.find(s=>s.codigo.toUpperCase()===codigo && (!state.editingStudent || s.id!==state.editingStudent.id));
+      if(dupCode){ toast('Já existe um aluno com esse código.', true); return; }
+      const bloq = Array.from(formStudent.querySelectorAll('input[name=bloq]:checked')).map(i=>i.value);
+      const payload = {
+        nome, codigo,
+        cpfResponsavel: fd.get('cpfResponsavel')||'',
+        saldo: parseFloat(fd.get('saldo'))||0,
+        limiteDiario: parseFloat(fd.get('limiteDiario'))||0,
+        produtosBloqueados: bloq,
+        ativo: fd.get('ativo')==='on'
+      };
+      if(state.editingStudent){
+        Object.assign(DB.students.find(s=>s.id===state.editingStudent.id), payload);
+      } else {
+        DB.students.push({ id:uid('st_'), ...payload });
+      }
+      await persist('students');
+      state.studentModalOpen=false; toast('Aluno salvo!'); render();
+    };
+    const delStud = document.getElementById('btnDeleteStudent');
+    if(delStud) delStud.onclick = async ()=>{
+      if(!confirm('Excluir este aluno? Os lançamentos antigos serão mantidos no histórico.')) return;
+      DB.students = DB.students.filter(s=>s.id!==state.editingStudent.id);
+      await persist('students');
+      state.studentModalOpen=false; toast('Aluno excluído.'); render();
+    };
+  }
+}
+
+/* ---------------- init ---------------- */
+(async function init(){
+  document.getElementById('app').innerHTML = '<div class="center-screen"><div class="muted">Carregando Kantina Casa da Gilda...</div></div>';
+  await bootstrap();
+  render();
+})();
 </script>
 </body>
 </html>
